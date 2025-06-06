@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}QueryOS - Dashboard{% endblock %}
+
+{% block content %}
+    <h2 class="text-center text-primary mb-4">Welcome to the QueryOS Dashboard!</h2>
+    <p class="text-center">This is your central hub for accessing different data tables.</p>
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Production Data</h5>
+                    <p class="card-text">View and search the production data table.</p>
+                    <a href="{{ url_for('production_data') }}" class="btn btn-primary">Go to Production Data</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Cutting Data</h5>
+                    <p class="card-text">View and search the cutting data table.</p>
+                    <a href="{{ url_for('cutting') }}" class="btn btn-primary">Go to Cutting Data</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Tab Production Data</h5>
+                    <p class="card-text">View and search the tab production data table.</p>
+                    <a href="{{ url_for('tab_production') }}" class="btn btn-primary">Go to Tab Production Data</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %} 

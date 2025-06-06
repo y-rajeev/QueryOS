@@ -1,0 +1,432 @@
+/* General Styles */
+body {
+    overflow-x: hidden; /* Prevent horizontal scrollbar from appearing due to off-screen content */
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', sans-serif;
+    /* Add a left margin to body to make space for the default collapsed sidebar */
+    padding-left: 60px; /* Adjust to initial collapsed sidebar width */
+}
+
+/* Wrapper for sidebar and content */
+#wrapper {
+    display: flex;
+    width: 100%;
+    /* transition: all 0.3s ease; Removed as margin transition is on sidebar */
+}
+
+/* Sidebar Styles */
+#sidebar-wrapper {
+    min-height: 100vh; /* Full height */
+    width: 60px; /* Default collapsed width */
+    background-color: #ffffff; /* White background like example */
+    border-right: 1px solid #e0e0e0; /* Subtle right border */
+    transition: width .25s ease-out; /* Transition for width change */
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1); /* Subtle shadow */
+    position: fixed; /* Fix sidebar position */
+    top: 0;
+    left: 0;
+    z-index: 1000; /* Ensure sidebar is above content */
+    overflow-y: auto; /* Add vertical scroll if menu items exceed height */
+    overflow-x: hidden; /* Hide overflowing text in collapsed state */
+}
+
+#sidebar-wrapper .sidebar-heading {
+    padding: 0.75rem 1rem; /* Adjusted padding */
+    font-size: 1.3rem; /* Slightly larger font */
+    color: #333; /* Darker text color */
+    border-bottom: 1px solid #e0e0e0; /* Separator line */
+    font-weight: bold;
+    white-space: nowrap; /* Prevent heading from wrapping */
+    display: flex; /* Use flexbox for alignment */
+    justify-content: space-between; /* Space out title and icon */
+    align-items: center; /* Vertically align items */
+    height: 60px; /* Explicit height to match collapsed width */
+    position: relative; /* Needed for positioning content */
+    cursor: pointer; /* Indicate it's clickable */
+}
+
+#sidebar-wrapper .sidebar-heading span {
+    /* Style for the 'QueryOS Menu' text */
+    flex-grow: 1; /* Allow text to take available space */
+    transition: opacity 0.2s ease; /* Add fade transition for text */
+    margin-right: 1rem; /* Space between text and icon */
+}
+
+body:not(.sb-sidenav-toggled) #sidebar-wrapper .sidebar-heading span {
+    display: none; /* Hide text when sidebar is collapsed */
+}
+
+#sidebar-wrapper .sidebar-heading i {
+    /* Style for the menu icon */
+    font-size: 1.4rem; /* Icon size */
+    color: #555; /* Icon color */
+    flex-shrink: 0; /* Prevent icon from shrinking */
+    transition: color 0.2s ease; /* Hover effect for icon color */
+}
+
+#sidebar-wrapper .sidebar-heading:hover i {
+    color: #000; /* Darken icon on hover */
+}
+
+#sidebar-wrapper .list-group {
+    width: 100%;
+    padding-top: 0; /* Reduced padding at the top of the list group */
+}
+
+#sidebar-wrapper .list-group-item {
+    border: none;
+    padding: 0.6rem 1rem; /* Reduced padding */
+    color: #333;
+    background-color: transparent;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.2s ease, color 0.2s ease; /* Keep existing transition */
+    font-size: 1rem;
+    white-space: nowrap; /* Prevent text from wrapping */
+    overflow: hidden; /* Hide text overflow */
+}
+
+#sidebar-wrapper .list-group-item i {
+    font-size: 1.1rem;
+    margin-right: 0.75rem; /* Adjusted margin */
+    color: #555;
+    flex-shrink: 0; /* Prevent icon from shrinking */
+}
+
+#sidebar-wrapper .list-group-item .sidebar-text {
+    display: none; /* Hide text by default in collapsed state */
+    flex-grow: 1; /* Allow text to take remaining space */
+    transition: opacity 0.1s ease; /* Optional: add fade transition for text */
+}
+
+#sidebar-wrapper .list-group-item:hover {
+    background-color: #e9e9e9; /* Slightly darker background on hover */
+    color: #000; /* Darken text on hover */
+    transform: translateX(3px); /* Subtle slide effect on hover */
+}
+
+#sidebar-wrapper .list-group-item.active {
+    background-color: #d0d0d0; /* Slightly darker background for active item */
+    color: #000; /* Dark text for active item */
+    font-weight: 600;
+}
+
+/* Page content wrapper styles */
+#page-content-wrapper {
+    min-width: 100vw;
+    flex-grow: 1;
+    padding: 0;
+    /* Adjust left margin to make space for the sidebar, add transition */
+    margin-left: 0; /* Content starts right after the collapsed sidebar */
+    transition: margin-left .25s ease-out;
+}
+
+#page-content-wrapper .container-fluid {
+    padding: 1.5rem;
+}
+
+/* Toggled state - Sidebar expanded */
+body.sb-sidenav-toggled {
+    /* Remove or adjust left padding on body if needed */
+    padding-left: 250px; /* Adjust to expanded sidebar width */
+}
+
+body.sb-sidenav-toggled #sidebar-wrapper {
+    width: 250px; /* Expanded width */
+}
+
+body.sb-sidenav-toggled #sidebar-wrapper .sidebar-text {
+    display: inline; /* Show text in expanded state */
+    opacity: 1; /* Ensure text is visible if using opacity transition */
+}
+
+body.sb-sidenav-toggled #page-content-wrapper {
+    /* Adjust left margin when sidebar is expanded */
+    margin-left: 0; /* Content starts right after the expanded sidebar */
+    min-width: calc(100vw - 250px); /* Content takes remaining width */
+}
+
+/* Navbar Styles */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,.05);
+    margin-bottom: 2rem;
+    background-color: #fff !important;
+    border-bottom: 1px solid #e0e0e0;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    width: 100%; /* Ensure navbar takes full width of content wrapper */
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+    color: #333;
+}
+
+.nav-link {
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+    background-color: rgba(255,255,255,.1);
+    border-radius: 4px;
+}
+
+.nav-link.active {
+    background-color: rgba(255,255,255,.2);
+    border-radius: 4px;
+}
+
+/* Search bar in Navbar */
+.navbar .d-flex.mx-auto {
+    flex-grow: 1;
+    max-width: 500px;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Adjust search button style */
+.navbar .btn-outline-success {
+    color: #007bff;
+    border-color: #007bff;
+}
+
+.navbar .btn-outline-success:hover {
+    color: #fff;
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+/* Form Styles */
+.form-control {
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+/* Table Styles */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table {
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,.1);
+    border-radius: 8px;
+    overflow: hidden;
+    table-layout: fixed;
+    width: 100%;
+}
+
+.table thead th {
+    background-color: #343a40;
+    color: white;
+    border: none;
+    padding: 1rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: top;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0,0,0,.02);
+}
+
+.table td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+    width: 350px;
+    height: 30px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+}
+
+.table td:hover {
+    white-space: nowrap;
+    word-break: normal;
+    position: static;
+    z-index: auto;
+    background-color: transparent; /* Ensure hover doesn't show background here */
+    box-shadow: none;
+    cursor: default;
+    overflow: hidden;
+    text-overflow: clip;
+}
+
+/* Button Styles */
+.btn {
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0069d9;
+    border-color: #0062cc;
+    transform: translateY(-1px);
+}
+
+/* Pagination Styles */
+.pagination {
+    margin-top: 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.page-item {
+    margin: 0 2px;
+}
+
+.page-link {
+    color: #007bff;
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.page-link:hover {
+    background-color: #e9ecef;
+    transform: translateY(-1px);
+}
+
+.page-item.active .page-link {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+/* Heading Styles */
+h2 {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 2rem;
+    color: #2c3e50;
+}
+
+/* Responsive Adjustments */
+@media (min-width: 768px) {
+    /* On larger screens, sidebar is visible by default (icons only) */
+    body {
+        padding-left: 60px; /* Space for collapsed sidebar */
+    }
+
+     #sidebar-wrapper {
+        width: 60px; /* Collapsed width */
+        margin-left: 0; /* Visible */
+    }
+
+    #page-content-wrapper {
+        margin-left: 0; /* Content starts after sidebar */
+        min-width: calc(100vw - 60px); /* Content takes remaining width */
+        width: auto;
+    }
+
+    body.sb-sidenav-toggled {
+        padding-left: 250px; /* Space for expanded sidebar */
+    }
+
+    body.sb-sidenav-toggled #sidebar-wrapper {
+        width: 250px; /* Expanded width */
+    }
+
+    body.sb-sidenav-toggled #sidebar-wrapper .sidebar-text {
+        display: inline; /* Show text */
+    }
+
+     body.sb-sidenav-toggled #page-content-wrapper {
+        margin-left: 0; /* Content starts after expanded sidebar */
+        min-width: calc(100vw - 250px); /* Content takes remaining width */
+    }
+}
+
+@media (max-width: 768px) {
+    /* On smaller screens, sidebar is hidden by default */
+    body {
+         padding-left: 0; /* No padding when sidebar is hidden */
+    }
+
+    #sidebar-wrapper {
+        margin-left: -250px; /* Hidden off-screen */
+        width: 250px; /* Expanded width when shown */
+    }
+
+     body.sb-sidenav-toggled #sidebar-wrapper {
+        margin-left: 0; /* Show sidebar */
+    }
+
+    #sidebar-wrapper .sidebar-heading {
+         justify-content: space-between; /* Space out title and icon */
+    }
+
+    #sidebar-wrapper .sidebar-heading span {
+        display: inline; /* Show title text in mobile sidebar header */
+    }
+
+    #sidebar-wrapper .sidebar-heading i {
+        /* Ensure icon is visible */
+        display: inline;
+    }
+
+    #sidebar-wrapper .list-group-item .sidebar-text {
+         display: inline; /* Text is always visible when sidebar is shown on small screens */
+    }
+
+    #page-content-wrapper {
+        min-width: 100vw;
+        width: 100%;
+    }
+
+    body.sb-sidenav-toggled #page-content-wrapper {
+        overflow-x: hidden;
+    }
+
+    .container-fluid {
+        padding: 1rem;
+    }
+    
+    .table-responsive {
+        margin: 0;
+        overflow-x: auto;
+    }
+    
+    .btn {
+        width: auto;
+        margin-top: 0;
+    }
+
+    .table td {
+        width: 250px;
+    }
+
+    .pagination {
+        justify-content: flex-start;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .page-item {
+        flex-shrink: 0;
+    }
+
+    .navbar .d-flex.mx-auto {
+        max-width: 100%;
+    }
+}
+

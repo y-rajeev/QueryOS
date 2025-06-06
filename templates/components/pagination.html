@@ -1,0 +1,61 @@
+{% if total_pages > 1 %}
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        {% set max_visible_pages = 10 %}
+        {% set half_visible_pages = max_visible_pages // 2 %}
+        
+        {% set start_page = [1, current_page - half_visible_pages]|max %}
+        {% set end_page = [total_pages, current_page + half_visible_pages]|min %}
+        
+        {# Adjust start and end if the range is too close to the boundaries #}
+        {% if end_page - start_page + 1 < max_visible_pages %}
+            {% set start_page = [1, end_page - max_visible_pages + 1]|max %}
+            {% set end_page = [total_pages, start_page + max_visible_pages - 1]|min %}
+        {% endif %}
+
+        {% if current_page > 1 %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1&search={{ search }}{% for key, value in request.args.items() if key.startswith('filter_') %}&{{ key }}={{ value }}{% endfor %}" aria-label="First">
+                <span aria-hidden="true">&laquo;&laquo;</span>
+            </a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ current_page - 1 }}&search={{ search }}{% for key, value in request.args.items() if key.startswith('filter_') %}&{{ key }}={{ value }}{% endfor %}" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+        </li>
+        {% endif %}
+
+        {% if start_page > 1 %}
+        <li class="page-item disabled">
+            <span class="page-link">...</span>
+        </li>
+        {% endif %}
+
+        {% for p in range(start_page, end_page + 1) %}
+        <li class="page-item {% if p == current_page %}active{% endif %}">
+            <a class="page-link" href="?page={{ p }}&search={{ search }}{% for key, value in request.args.items() if key.startswith('filter_') %}&{{ key }}={{ value }}{% endfor %}">{{ p }}</a>
+        </li>
+        {% endfor %}
+
+        {% if end_page < total_pages %}
+        <li class="page-item disabled">
+            <span class="page-link">...</span>
+        </li>
+        {% endif %}
+
+        {% if current_page < total_pages %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ current_page + 1 }}&search={{ search }}{% for key, value in request.args.items() if key.startswith('filter_') %}&{{ key }}={{ value }}{% endfor %}" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ total_pages }}&search={{ search }}{% for key, value in request.args.items() if key.startswith('filter_') %}&{{ key }}={{ value }}{% endfor %}" aria-label="Last">
+                <span aria-hidden="true">&raquo;&raquo;</span>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %} 
