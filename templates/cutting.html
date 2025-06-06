@@ -1,38 +1,95 @@
+<!-- TEMPLATE_UPDATED_INDICATOR_V1 -->
 {% extends "base.html" %}
 
 {% block title %}Cutting Data{% endblock %}
 
+{% block extra_css %}
+<style>
+    .table-row-selectable {
+        cursor: pointer;
+    }
+    /* Adjust padding for checkbox column */
+    .table td:first-child, .table th:first-child {
+        width: 1%; /* Keep checkbox column narrow */
+        white-space: nowrap;
+        padding-left: 1rem; /* Adjust as needed */
+        padding-right: 0.5rem; /* Adjust as needed */
+    }
+    /* Adjust button spacing in the top right */
+    .justify-content-end .btn, .justify-content-end a.btn {
+        margin-left: 0.5rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
     <h2 class="text-center text-primary mb-4">Cutting Data</h2>
 
-    <!-- Search and Filters Form -->
-    <form method="get" class="mb-4">
-        <div class="row g-3 mb-3">
-            <div class="col-md-10">
-                <input type="text" class="form-control" name="search" placeholder="Search cutting data..." value="{{ search }}">
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">Search</button>
-            </div>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Search, Bulk Actions, and Add Button -->
+    <div class="row mb-3 align-items-center">
+        <div class="col-md-6">
+            <form method="get" class="d-flex">
+                <input type="text" class="form-control form-control-sm me-2" name="search" placeholder="Search cutting data..." value="{{ search }}">
+                <button type="submit" class="btn btn-primary btn-sm">Search</button>
+            </form>
         </div>
-    </form>
+        <div class="col-md-6 text-end d-flex justify-content-end">
+             <a href="{{ url_for('data.export_cutting', search=search) }}" class="btn btn-secondary btn-sm">
+                 <i class="bi bi-download"></i> Export Data
+             </a>
+            <button id="deleteSelectedBtn" class="btn btn-danger btn-sm" disabled>
+                 <i class="bi bi-trash"></i> Delete Selected
+            </button>
+            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addModal">
+                <i class="bi bi-plus-lg"></i> Add New Record
+            </button>
+        </div>
+    </div>
 
     <!-- Data Table -->
     <div class="table-responsive">
-        <table class="table table-striped table-bordered">
+        <table class="table table-striped table-bordered table-sm">
             <thead class="table-dark">
                 <tr>
-                    {% for header in headers %}
-                    <th>{{ header }}</th>
-                    {% endfor %}
+                    <th><input type="checkbox" id="selectAll"></th> {# Select All Checkbox #}
+                    <th>Date</th>
+                    <th>PO No</th>
+                    <th>SKU</th>
+                    <th>Product</th>
+                    <th>Line</th>
+                    <th>Design</th>
+                    <th>Size</th>
+                    <th>PCS Pack</th>
+                    <th>Sets</th>
+                    <th>Produced Qty</th>
                 </tr>
             </thead>
             <tbody>
                 {% for row in rows %}
-                <tr>
-                    {% for header in headers %}
-                    <td>{{ row[header] }}</td>
-                    {% endfor %}
+                <tr data-id="{{ row.id }}" class="table-row-selectable">
+                    <td><input type="checkbox" class="row-select"></td>
+                    <td>{{ row.date }}</td>
+                    <td>{{ row.po_no }}</td>
+                    <td>{{ row.sku }}</td>
+                    <td>{{ row.product }}</td>
+                    <td>{{ row.line }}</td>
+                    <td>{{ row.design }}</td>
+                    <td>{{ row.size }}</td>
+                    <td>{{ row.pcs_pack }}</td>
+                    <td>{{ row.sets }}</td>
+                    <td>{{ row.produced_qty }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -40,4 +97,402 @@
     </div>
 
     {% include 'components/pagination.html' %}
+
+    <!-- View Details Modal -->
+    <div class="modal fade" id="viewDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Record Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {# Content will be loaded here by JavaScript #}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="editFromViewBtn">Edit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Modal -->
+    <div class="modal fade" id="addModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Cutting Record</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ url_for('data.add_cutting') }}" method="POST">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            {# Input fields for adding new record #}
+                            <div class="col-md-6">
+                                <label class="form-label">ID</label>
+                                <input type="text" class="form-control form-control-sm" name="id" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Date</label>
+                                <input type="date" class="form-control form-control-sm" name="date" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">PO No</label>
+                                <input type="text" class="form-control form-control-sm" name="po_no" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">SKU</label>
+                                <input type="text" class="form-control form-control-sm" name="sku" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Product</label>
+                                <input type="text" class="form-control form-control-sm" name="product" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Line</label>
+                                <input type="text" class="form-control form-control-sm" name="line" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Design</label>
+                                <input type="text" class="form-control form-control-sm" name="design" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Size</label>
+                                <input type="text" class="form-control form-control-sm" name="size" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">PCS Pack</label>
+                                <input type="number" class="form-control form-control-sm" name="pcs_pack" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Sets</label>
+                                <input type="number" class="form-control form-control-sm" name="sets" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Produced Quantity</label>
+                                <input type="number" class="form-control form-control-sm" name="produced_qty" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Unpair PCS</label>
+                                <input type="number" class="form-control form-control-sm" name="unpair_pcs" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Rejection</label>
+                                <input type="number" class="form-control form-control-sm" name="rejection" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Cutting Record</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editForm" method="POST">
+                     <div class="modal-body">
+                        <div class="row g-3">
+                            {# Input fields for editing record #}
+                            <div class="col-md-6">
+                                <label class="form-label">Date</label>
+                                <input type="date" class="form-control form-control-sm" name="date" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">PO No</label>
+                                <input type="text" class="form-control form-control-sm" name="po_no" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">SKU</label>
+                                <input type="text" class="form-control form-control-sm" name="sku" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Product</label>
+                                <input type="text" class="form-control form-control-sm" name="product" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Line</label>
+                                <input type="text" class="form-control form-control-sm" name="line" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Design</label>
+                                <input type="text" class="form-control form-control-sm" name="design" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Size</label>
+                                <input type="text" class="form-control form-control-sm" name="size" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">PCS Pack</label>
+                                <input type="number" class="form-control form-control-sm" name="pcs_pack" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Sets</label>
+                                <input type="number" class="form-control form-control-sm" name="sets" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Produced Quantity</label>
+                                <input type="number" class="form-control form-control-sm" name="produced_qty" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Unpair PCS</label>
+                                <input type="number" class="form-control form-control-sm" name="unpair_pcs" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Rejection</label>
+                                <input type="number" class="form-control form-control-sm" name="rejection" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete the selected records?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger btn-sm" id="confirmBulkDeleteBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const table = document.querySelector('.table tbody');
+        const selectAllCheckbox = document.getElementById('selectAll');
+        // Use event delegation for checkboxes to include future rows if pagination loads more data
+        const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+        const viewDetailsModal = new bootstrap.Modal(document.getElementById('viewDetailsModal'));
+        const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+        const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        const confirmBulkDeleteBtn = document.getElementById('confirmBulkDeleteBtn');
+        const viewDetailsModalBody = document.querySelector('#viewDetailsModal .modal-body');
+        const editForm = document.getElementById('editForm');
+        const editFromViewBtn = document.getElementById('editFromViewBtn');
+
+        // Store selected row IDs
+        let selectedRows = new Set();
+
+        // Function to update delete button state and select-all checkbox
+        function updateSelectionState() {
+            const rowSelectCheckboxes = table.querySelectorAll('.row-select');
+            selectedRows.clear(); // Clear set to rebuild based on current checked checkboxes
+            rowSelectCheckboxes.forEach(checkbox => {
+                 if (checkbox.checked) {
+                     selectedRows.add(checkbox.closest('tr').dataset.id);
+                 }
+            });
+
+            deleteSelectedBtn.disabled = selectedRows.size === 0;
+
+            const totalRows = rowSelectCheckboxes.length;
+            const selectedCount = selectedRows.size;
+
+            if (totalRows === 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            } else if (selectedCount === 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            } else if (selectedCount === totalRows) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = false;
+            } else {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = true;
+            }
+        }
+
+        // Handle individual row checkbox clicks using event delegation
+        table.addEventListener('change', function (event) {
+            if (event.target.classList.contains('row-select')) {
+                 updateSelectionState();
+            }
+        });
+
+        // Handle select-all checkbox click
+        selectAllCheckbox.addEventListener('change', function (event) {
+            const isChecked = event.target.checked;
+            table.querySelectorAll('.row-select').forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+             updateSelectionState(); // Update state after changing all checkboxes
+        });
+
+        // Handle double-click on table rows using event delegation
+        table.addEventListener('dblclick', function (event) {
+            const row = event.target.closest('tr');
+            // Ensure the double-click was not on the checkbox itself
+            if (row && row.dataset.id && !event.target.classList.contains('row-select')) {
+                const rowId = row.dataset.id;
+                console.log('Double-clicked row with ID:', rowId); // Log the extracted ID
+                const fetchUrl = `/cutting/details/${rowId}`;
+                console.log('Fetching details from URL:', fetchUrl); // Log the fetch URL
+                // Fetch full details for the record
+                fetch(fetchUrl)
+                    .then(response => {
+                        console.log('Received response with status:', response.status); // Log the response status
+                        if (!response.ok) {
+                            // Log the error response status and potentially the text
+                            console.error('HTTP error! Status:', response.status);
+                            // Attempt to read the response body for more info, but handle if it's not text/json
+                            response.text().then(text => console.error('Response body:', text)).catch(() => console.error('Could not read response body.'));
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Successfully fetched data:', data); // Log the successfully fetched data
+                        // Populate the view details modal body
+                        let htmlContent = '<div class="row g-3">';
+                        for (const key in data) {
+                            // Exclude the ID from display in the view modal if you wish
+                             if (key !== 'id') {
+                                 // Capitalize the first letter and replace underscores for display
+                                 const displayKey = key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
+                                 htmlContent += `<div class="col-md-6"><p><strong>${displayKey}:</strong> ${data[key]}</p></div>`;
+                             }
+                        }
+                        htmlContent += '</div>';
+                        viewDetailsModalBody.innerHTML = htmlContent;
+
+                        // Store the ID in the edit button for later use
+                        editFromViewBtn.dataset.id = rowId;
+
+                        // Show the view modal
+                        viewDetailsModal.show();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching record details:', error); // This is the general error log
+                        // Optionally show an error message to the user
+                        alert('Could not fetch record details. Check console for more info.'); // Update alert to guide user to console
+                    });
+            }
+        });
+
+        // Handle click on Edit button within the View Details modal
+        editFromViewBtn.addEventListener('click', function() {
+             const rowId = this.dataset.id;
+             if (rowId) {
+                 // Hide view modal
+                 viewDetailsModal.hide();
+                 // Fetch data again to populate the edit form - good practice to get fresh data
+                 fetch(`/cutting/details/${rowId}`)
+                    .then(response => {
+                         if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                         }
+                         return response.json();
+                    })
+                    .then(data => {
+                         // Populate the edit form fields
+                         editForm.action = `/cutting/edit/${rowId}`;
+                         for (const key in data) {
+                             if (editForm.elements[key]) {
+                                 // Handle date input format
+                                 if (editForm.elements[key].type === 'date' && data[key]) {
+                                     // Assuming date is in YYYY-MM-DD format from backend
+                                     editForm.elements[key].value = data[key];
+                                 } else {
+                                     editForm.elements[key].value = data[key];
+                                 }
+                             }
+                         }
+                        editModal.show();
+                    })
+                    .catch(error => {
+                         console.error('Error fetching record details for edit:', error);
+                         // Optionally show an error message to the user
+                         alert('Could not load record data for editing.');
+                    });
+             }
+        });
+
+        // Handle click on Delete Selected button (opens confirmation modal)
+        deleteSelectedBtn.addEventListener('click', function() {
+            if (selectedRows.size > 0) {
+                deleteConfirmModal.show();
+            }
+        });
+
+        // Handle confirmation of bulk delete
+        confirmBulkDeleteBtn.addEventListener('click', function() {
+            const idsToDelete = Array.from(selectedRows);
+            // Close confirmation modal immediately
+            deleteConfirmModal.hide();
+
+            fetch('/cutting/bulk_delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Add CSRF token here if you have Flask-WTF configured
+                    // 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content') # Example
+                },
+                body: JSON.stringify({ ids: idsToDelete })
+            })
+            .then(response => {
+                // Check for a JSON response explicitly if your backend sends JSON on success/error
+                if (response.headers.get('content-type') && response.headers.get('content-type').includes('application/json')) {
+                     return response.json().then(data => ({ status: response.status, body: data }));
+                } else {
+                     // If not JSON, assume text or no body on success
+                     return response.text().then(text => ({ status: response.status, body: text }));
+                }
+            })
+            .then(({ status, body }) => {
+                if (status >= 200 && status < 300) {
+                    console.log('Delete successful:', body);
+                    // Handle success (e.g., show flash message, refresh page)
+                    // Clear selection and update button state
+                    selectedRows.clear();
+                    updateSelectionState(); // Update button and select-all based on remaining rows
+                    // Consider refreshing the page or removing rows dynamically
+                    window.location.reload(); // Simple refresh for now
+                } else {
+                    console.error('Error during bulk delete:', body);
+                    // Handle error (e.g., show error message)
+                     alert(`Error deleting records: ${body.message || body}`); // Show message from backend or raw body
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error during bulk delete:', error);
+                // Handle network errors etc.
+                alert('An error occurred during the delete request.');
+            });
+        });
+
+         // Initial state update
+        updateSelectionState();
+
+    });
+
+</script>
 {% endblock %} 

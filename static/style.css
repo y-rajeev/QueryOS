@@ -3,122 +3,115 @@ body {
     overflow-x: hidden; /* Prevent horizontal scrollbar from appearing due to off-screen content */
     background-color: #f8f9fa;
     font-family: 'Segoe UI', sans-serif;
-    /* Add a left margin to body to make space for the default collapsed sidebar */
-    padding-left: 60px; /* Adjust to initial collapsed sidebar width */
+    padding-left: 0; /* Remove body padding as margin will be handled by page-content-wrapper */
+    padding-top: 56px; /* Approximate height of default Bootstrap navbar. Adjust if your navbar height is different. */
 }
 
 /* Wrapper for sidebar and content */
 #wrapper {
     display: flex;
     width: 100%;
-    /* transition: all 0.3s ease; Removed as margin transition is on sidebar */
 }
 
 /* Sidebar Styles */
 #sidebar-wrapper {
-    min-height: 100vh; /* Full height */
+    min-height: calc(100vh - 56px); /* Full height minus navbar height. Adjust 56px if navbar height is different. */
     width: 60px; /* Default collapsed width */
-    background-color: #ffffff; /* White background like example */
+    background-color: #343a40; /* Dark background */
     border-right: 1px solid #e0e0e0; /* Subtle right border */
     transition: width .25s ease-out; /* Transition for width change */
     box-shadow: 2px 0 5px rgba(0,0,0,0.1); /* Subtle shadow */
     position: fixed; /* Fix sidebar position */
-    top: 0;
+    top: 56px; /* Position below fixed navbar. Adjust 56px if navbar height is different. */
     left: 0;
     z-index: 1000; /* Ensure sidebar is above content */
     overflow-y: auto; /* Add vertical scroll if menu items exceed height */
     overflow-x: hidden; /* Hide overflowing text in collapsed state */
+    color: #f8f9fa; /* Light text color for visible items */
 }
 
 #sidebar-wrapper .sidebar-heading {
-    padding: 0.75rem 1rem; /* Adjusted padding */
-    font-size: 1.3rem; /* Slightly larger font */
-    color: #333; /* Darker text color */
-    border-bottom: 1px solid #e0e0e0; /* Separator line */
+    padding: 0.75rem 1rem;
+    font-size: 1.3rem;
+    color: #f8f9fa; /* Light text color */
+    border-bottom: 1px solid rgba(255,255,255,0.1); /* Lighter separator line */
     font-weight: bold;
-    white-space: nowrap; /* Prevent heading from wrapping */
-    display: flex; /* Use flexbox for alignment */
-    justify-content: space-between; /* Space out title and icon */
-    align-items: center; /* Vertically align items */
-    height: 60px; /* Explicit height to match collapsed width */
-    position: relative; /* Needed for positioning content */
-    cursor: pointer; /* Indicate it's clickable */
+    white-space: nowrap;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60px;
+    position: relative;
+    cursor: pointer;
 }
 
-#sidebar-wrapper .sidebar-heading span {
-    /* Style for the 'QueryOS Menu' text */
-    flex-grow: 1; /* Allow text to take available space */
-    transition: opacity 0.2s ease; /* Add fade transition for text */
-    margin-right: 1rem; /* Space between text and icon */
-}
-
+/* Hide sidebar heading text when sidebar is collapsed */
 body:not(.sb-sidenav-toggled) #sidebar-wrapper .sidebar-heading span {
-    display: none; /* Hide text when sidebar is collapsed */
+    display: none;
 }
 
 #sidebar-wrapper .sidebar-heading i {
-    /* Style for the menu icon */
-    font-size: 1.4rem; /* Icon size */
-    color: #555; /* Icon color */
-    flex-shrink: 0; /* Prevent icon from shrinking */
-    transition: color 0.2s ease; /* Hover effect for icon color */
+    font-size: 1.4rem;
+    color: #f8f9fa; /* Light icon color */
+    flex-shrink: 0;
+    transition: color 0.2s ease;
 }
 
 #sidebar-wrapper .sidebar-heading:hover i {
-    color: #000; /* Darken icon on hover */
+    color: #ffffff; /* Lighter icon on hover */
 }
 
 #sidebar-wrapper .list-group {
     width: 100%;
-    padding-top: 0; /* Reduced padding at the top of the list group */
+    padding-top: 0;
 }
 
 #sidebar-wrapper .list-group-item {
     border: none;
-    padding: 0.6rem 1rem; /* Reduced padding */
-    color: #333;
+    padding: 0.6rem 1rem;
+    color: #f8f9fa; /* Light text color */
     background-color: transparent;
     display: flex;
     align-items: center;
-    transition: background-color 0.2s ease, color 0.2s ease; /* Keep existing transition */
+    transition: background-color 0.2s ease, color 0.2s ease;
     font-size: 1rem;
-    white-space: nowrap; /* Prevent text from wrapping */
-    overflow: hidden; /* Hide text overflow */
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 #sidebar-wrapper .list-group-item i {
     font-size: 1.1rem;
-    margin-right: 0.75rem; /* Adjusted margin */
-    color: #555;
-    flex-shrink: 0; /* Prevent icon from shrinking */
+    margin-right: 0.75rem;
+    color: #f8f9fa; /* Light icon color */
+    flex-shrink: 0;
 }
 
 #sidebar-wrapper .list-group-item .sidebar-text {
-    display: none; /* Hide text by default in collapsed state */
-    flex-grow: 1; /* Allow text to take remaining space */
-    transition: opacity 0.1s ease; /* Optional: add fade transition for text */
+     display: none; /* Hide text by default in collapsed state */
+     flex-grow: 1;
+     transition: opacity 0.1s ease;
 }
 
 #sidebar-wrapper .list-group-item:hover {
-    background-color: #e9e9e9; /* Slightly darker background on hover */
-    color: #000; /* Darken text on hover */
-    transform: translateX(3px); /* Subtle slide effect on hover */
+    background-color: rgba(255,255,255,0.1); /* Semi-transparent white on hover */
+    color: #ffffff; /* White text on hover */
+    transform: translateX(3px);
 }
 
 #sidebar-wrapper .list-group-item.active {
-    background-color: #d0d0d0; /* Slightly darker background for active item */
-    color: #000; /* Dark text for active item */
+    background-color: rgba(255,255,255,0.2); /* More semi-transparent white for active */
+    color: #ffffff; /* White text for active */
     font-weight: 600;
 }
 
 /* Page content wrapper styles */
 #page-content-wrapper {
-    min-width: 100vw;
     flex-grow: 1;
+    margin-left: 60px; /* Space for collapsed sidebar */
     padding: 0;
-    /* Adjust left margin to make space for the sidebar, add transition */
-    margin-left: 0; /* Content starts right after the collapsed sidebar */
     transition: margin-left .25s ease-out;
+    /* Ensure content starts below the fixed navbar */
+    margin-top: 0;
 }
 
 #page-content-wrapper .container-fluid {
@@ -126,11 +119,6 @@ body:not(.sb-sidenav-toggled) #sidebar-wrapper .sidebar-heading span {
 }
 
 /* Toggled state - Sidebar expanded */
-body.sb-sidenav-toggled {
-    /* Remove or adjust left padding on body if needed */
-    padding-left: 250px; /* Adjust to expanded sidebar width */
-}
-
 body.sb-sidenav-toggled #sidebar-wrapper {
     width: 250px; /* Expanded width */
 }
@@ -141,65 +129,240 @@ body.sb-sidenav-toggled #sidebar-wrapper .sidebar-text {
 }
 
 body.sb-sidenav-toggled #page-content-wrapper {
-    /* Adjust left margin when sidebar is expanded */
-    margin-left: 0; /* Content starts right after the expanded sidebar */
-    min-width: calc(100vw - 250px); /* Content takes remaining width */
+    margin-left: 250px; /* Adjust left margin when sidebar is expanded */
+}
+
+/* Ensure content wrapper takes remaining width */
+#page-content-wrapper {
+    width: calc(100% - 60px); /* Default width */
+}
+
+body.sb-sidenav-toggled #page-content-wrapper {
+    width: calc(100% - 250px); /* Adjusted width when sidebar is expanded */
 }
 
 /* Navbar Styles */
 .navbar {
     box-shadow: 0 2px 4px rgba(0,0,0,.05);
-    margin-bottom: 2rem;
-    background-color: #fff !important;
-    border-bottom: 1px solid #e0e0e0;
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
-    width: 100%; /* Ensure navbar takes full width of content wrapper */
+    /* Remove margin-bottom as layout is handled by padding-top on body */
+    margin-bottom: 0;
+    background-color: #0d6efd !important; /* Blue background color */
+    border-bottom: 1px solid #0a58ca; /* Slightly darker blue border */
+    padding-top: 0.5rem; /* Adjust vertical padding of the navbar */
+    padding-bottom: 0.5rem; /* Adjust vertical padding of the navbar */
+    position: fixed; /* Make navbar fixed */
+    top: 0;
+    left: 0; /* Ensure navbar starts from the left edge */
+    width: 100%; /* Full width */
+    z-index: 1030; /* Ensure navbar is above sidebar and content */
+}
+
+.navbar .container-fluid {
+    padding-right: 0.75rem; /* Adjust horizontal padding */
+    padding-left: 0.75rem;  /* Adjust horizontal padding */
+    align-items: center; /* Vertically align items */
+}
+
+/* Style for the top sidebar toggle button */
+#sidebarToggleTop {
+    color: #ffffff; /* White icon color */
+    background-color: transparent; /* No background */
+    border: none; /* Remove border */
+    padding: 0.5rem 0.75rem; /* Adjust padding as needed */
+    font-size: 1.25rem; /* Adjust icon size */
+    line-height: 1;
+    border-radius: 0.35rem;
+    transition: all 0.3s ease;
+}
+
+#sidebarToggleTop:hover {
+    color: #ffffff; /* Keep icon white on hover */
+    background-color: rgba(255, 255, 255, 0.1); /* Subtle hover effect */
+    border: none;
 }
 
 .navbar-brand {
     font-weight: bold;
     font-size: 1.5rem;
-    color: #333;
+    color: #ffffff; /* White text color */
+    margin-left: 0.5rem; /* Space after the toggle button */
+    margin-right: 1rem; /* Space before the search form */
 }
 
 .nav-link {
     font-weight: 500;
     padding: 0.5rem 1rem;
     transition: all 0.3s ease;
+    color: #ffffff !important; /* White text color for nav links */
 }
 
 .nav-link:hover {
-    background-color: rgba(255,255,255,.1);
+    background-color: rgba(255,255,255,.1); /* Subtle hover effect */
     border-radius: 4px;
+    color: #ffffff !important;
 }
 
 .nav-link.active {
-    background-color: rgba(255,255,255,.2);
+    background-color: rgba(255,255,255,.2); /* Subtle active effect */
     border-radius: 4px;
+    color: #ffffff !important;
 }
 
 /* Search bar in Navbar */
 .navbar .d-flex.mx-auto {
-    flex-grow: 1;
-    max-width: 500px;
+    flex-grow: 1; /* Allows the form to take available space */
+    max-width: 400px; /* Limit max width of search form */
     margin-left: auto !important;
     margin-right: auto !important;
+    /* Remove or reduce vertical margins around the search form */
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    /* Use Bootstrap's gx-2 or similar classes in HTML for gap between input and button */
+    align-items: center; /* Vertically align items within the form */
 }
 
-/* Adjust search button style */
-.navbar .btn-outline-success {
-    color: #007bff;
-    border-color: #007bff;
+.navbar .d-flex.mx-auto .form-control {
+    font-size: 0.9rem;
+    padding: 0.25rem 0.5rem; /* Reduced vertical and horizontal padding */
+    background-color: rgba(255, 255, 255, 0.9); /* Slightly transparent white background */
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    color: #333; /* Dark text color for input */
+    border-radius: 0.25rem;
 }
 
-.navbar .btn-outline-success:hover {
-    color: #fff;
-    background-color: #007bff;
-    border-color: #007bff;
+.navbar .d-flex.mx-auto .form-control::placeholder {
+    color: #666; /* Darker grey for placeholder */
+    opacity: 1;
 }
 
-/* Form Styles */
+.navbar .d-flex.mx-auto .btn {
+     font-size: 0.9rem;
+     padding: 0.25rem 0.5rem; /* Reduced vertical and horizontal padding */
+}
+
+.navbar .d-flex.mx-auto .btn-outline-success {
+    color: #0d6efd; /* Blue text color */
+    background-color: #ffffff; /* White background */
+    border-color: #ffffff; /* White border */
+    border-radius: 0.25rem;
+}
+
+.navbar .d-flex.mx-auto .btn-outline-success:hover {
+    color: #ffffff; /* White text on hover */
+    background-color: #0a58ca; /* Slightly darker blue on hover */
+    border-color: #0a58ca;
+}
+
+/* Style the user icon/dropdown text */
+.navbar-nav .nav-link {
+   color: #ffffff !important; /* White text for all nav links in navbar */
+}
+.navbar-nav .nav-link i {
+    color: #ffffff !important; /* White color for icons in nav links */
+}
+
+/* Ensure content area doesn\'t overflow */
+#page-content-wrapper .container-fluid {
+    overflow-x: hidden;
+}
+
+/* Responsive Adjustments */
+@media (min-width: 768px) {
+    body {
+        padding-left: 0;
+        /* Adjust padding-top for larger screens if navbar height is different */
+        padding-top: 56px; /* Match navbar height */
+    }
+
+    #sidebar-wrapper {
+        width: 60px;
+        margin-left: 0;
+        top: 56px; /* Position below fixed navbar */
+        min-height: calc(100vh - 56px); /* Adjust calculation based on navbar height */
+    }
+
+    #page-content-wrapper {
+        margin-left: 60px;
+        width: calc(100% - 60px);
+        margin-top: 0; /* Ensure content starts at the top of the wrapper */
+    }
+
+    body.sb-sidenav-toggled #sidebar-wrapper {
+        width: 250px;
+    }
+
+    body.sb-sidenav-toggled #page-content-wrapper {
+        margin-left: 250px;
+        width: calc(100% - 250px);
+    }
+
+    /* Show the search form on larger screens */
+    .navbar .d-none.d-md-flex {
+        display: flex !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    body {
+         padding-left: 0;
+         /* Adjust padding-top for smaller screens if navbar height is different */
+         padding-top: 56px; /* Match navbar height */
+    }
+
+    #sidebar-wrapper {
+        margin-left: -250px;
+        width: 250px;
+        top: 56px; /* Position below fixed navbar */
+        min-height: calc(100vh - 56px); /* Adjust calculation based on navbar height */
+    }
+
+     body.sb-sidenav-toggled #sidebar-wrapper {
+        margin-left: 0;
+    }
+
+    #sidebar-wrapper .sidebar-heading span {
+         display: inline;
+    }
+
+    #sidebar-wrapper .list-group-item .sidebar-text {
+         display: inline;
+    }
+
+    #page-content-wrapper {
+        margin-left: 0;
+        width: 100%;
+        min-width: 100vw;
+        margin-top: 0; /* Ensure content starts at the top of the wrapper */
+    }
+
+    body.sb-sidenav-toggled #page-content-wrapper {
+        overflow-x: hidden;
+    }
+
+    .navbar .container-fluid {
+         padding-right: 1rem;
+         padding-left: 1rem;
+    }
+
+    .navbar .d-flex.mx-auto {
+        max-width: 100%;
+    }
+
+    /* Hide the search form on smaller screens by default, it can be toggled if needed */
+     .navbar .d-none.d-md-flex {
+        display: none !important;
+    }
+}
+
+/* Further adjustments for navbar elements for better alignment */
+/* Removed this general rule to use specific adjustments above
+.navbar .container-fluid > * {
+    margin-top: .25rem;
+    margin-bottom: .25rem;
+}
+*/
+
+/* Form Styles (General - already in your CSS) */
 .form-control {
     padding: 0.75rem 1rem;
     border-radius: 6px;
@@ -212,7 +375,7 @@ body.sb-sidenav-toggled #page-content-wrapper {
     box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
 }
 
-/* Table Styles */
+/* Table Styles (General - already in your CSS) */
 .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -223,49 +386,95 @@ body.sb-sidenav-toggled #page-content-wrapper {
     box-shadow: 0 1px 3px rgba(0,0,0,.1);
     border-radius: 8px;
     overflow: hidden;
-    table-layout: fixed;
+    /* table-layout: fixed; */ /* Keep this commented out */
     width: 100%;
+    border-collapse: separate; /* Needed for border-radius on table */
+    border-spacing: 0; /* Needed for border-radius on table */
+}
+
+/* Apply border-radius to the corners of the table */
+.table thead tr:first-child th:first-child {
+    border-top-left-radius: 8px;
+}
+
+.table thead tr:first-child th:last-child {
+    border-top-right-radius: 8px;
+}
+
+.table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 8px;
+}
+
+.table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 8px;
 }
 
 .table thead th {
     background-color: #343a40;
     color: white;
-    border: none;
-    padding: 1rem;
+    border: none; /* Remove default borders */
+    padding: 0.75rem 1rem; /* Adjusted padding */
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    vertical-align: top;
+    vertical-align: middle; /* Align header text vertically */
 }
 
-.table-striped tbody tr:nth-of-type(odd) {
+.table tbody tr:nth-of-type(odd) {
     background-color: rgba(0,0,0,.02);
 }
 
 .table td {
-    padding: 0.75rem 1rem;
+    padding: 0.4rem 1rem; /* Reduced vertical padding */
     vertical-align: middle;
-    width: 350px;
-    height: 30px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: clip;
+    white-space: nowrap; /* Prevent text wrapping */
+    overflow: hidden; /* Hide overflowing content */
+    text-overflow: ellipsis; /* Show ellipsis for truncated text */
+    border-top: 1px solid #dee2e6;
 }
 
-.table td:hover {
-    white-space: nowrap;
-    word-break: normal;
-    position: static;
-    z-index: auto;
-    background-color: transparent; /* Ensure hover doesn't show background here */
-    box-shadow: none;
-    cursor: default;
-    overflow: hidden;
-    text-overflow: clip;
+.table tbody tr:hover {
+    background-color: rgba(0,0,0,.05);
 }
 
-/* Button Styles */
+.table td:first-child, .table th:first-child {
+    width: 1%;
+    white-space: nowrap;
+    padding: 0.4rem 0.5rem 0.4rem 1rem; /* Adjusted padding for first column */
+    border-right: 1px solid #dee2e6;
+}
+
+.table th:last-child, .table td:last-child {
+    border-left: 1px solid #dee2e6;
+}
+
+/* Adjust width for specific columns if needed - use percentages or min/max width */
+.table th:nth-child(3), .table td:nth-child(3) { /* SKU */
+    width: 15%;
+}
+
+.table th:nth-child(4), .table td:nth-child(4) { /* Product */
+     width: 15%;
+}
+
+.table th:nth-child(6), .table td:nth-child(6) { /* Design */
+     width: 15%;
+}
+
+/* Ensure actions column doesn't take up excessive space */
+/* Since there are no action buttons, this might not be needed, but keeping for structure */
+.table th:last-child, .table td:last-child {
+     /* width: 1%; */ /* Remove fixed width if content is variable */
+     /* white-space: nowrap; */ /* Already set on td */
+}
+
+/* Style for buttons in the top right action area */
+.row.mb-3.align-items-center .justify-content-end .btn {
+    margin-left: 0.5rem; /* Space between buttons */
+}
+
+/* Button Styles (General - already in your CSS) */
 .btn {
     padding: 0.75rem 1.5rem;
     font-weight: 500;
@@ -284,7 +493,7 @@ body.sb-sidenav-toggled #page-content-wrapper {
     transform: translateY(-1px);
 }
 
-/* Pagination Styles */
+/* Pagination Styles (General - already in your CSS) */
 .pagination {
     margin-top: 2rem;
     flex-wrap: wrap;
@@ -312,121 +521,11 @@ body.sb-sidenav-toggled #page-content-wrapper {
     border-color: #007bff;
 }
 
-/* Heading Styles */
+/* Heading Styles (General - already in your CSS) */
 h2 {
     font-weight: 600;
     letter-spacing: 0.5px;
     margin-bottom: 2rem;
     color: #2c3e50;
-}
-
-/* Responsive Adjustments */
-@media (min-width: 768px) {
-    /* On larger screens, sidebar is visible by default (icons only) */
-    body {
-        padding-left: 60px; /* Space for collapsed sidebar */
-    }
-
-     #sidebar-wrapper {
-        width: 60px; /* Collapsed width */
-        margin-left: 0; /* Visible */
-    }
-
-    #page-content-wrapper {
-        margin-left: 0; /* Content starts after sidebar */
-        min-width: calc(100vw - 60px); /* Content takes remaining width */
-        width: auto;
-    }
-
-    body.sb-sidenav-toggled {
-        padding-left: 250px; /* Space for expanded sidebar */
-    }
-
-    body.sb-sidenav-toggled #sidebar-wrapper {
-        width: 250px; /* Expanded width */
-    }
-
-    body.sb-sidenav-toggled #sidebar-wrapper .sidebar-text {
-        display: inline; /* Show text */
-    }
-
-     body.sb-sidenav-toggled #page-content-wrapper {
-        margin-left: 0; /* Content starts after expanded sidebar */
-        min-width: calc(100vw - 250px); /* Content takes remaining width */
-    }
-}
-
-@media (max-width: 768px) {
-    /* On smaller screens, sidebar is hidden by default */
-    body {
-         padding-left: 0; /* No padding when sidebar is hidden */
-    }
-
-    #sidebar-wrapper {
-        margin-left: -250px; /* Hidden off-screen */
-        width: 250px; /* Expanded width when shown */
-    }
-
-     body.sb-sidenav-toggled #sidebar-wrapper {
-        margin-left: 0; /* Show sidebar */
-    }
-
-    #sidebar-wrapper .sidebar-heading {
-         justify-content: space-between; /* Space out title and icon */
-    }
-
-    #sidebar-wrapper .sidebar-heading span {
-        display: inline; /* Show title text in mobile sidebar header */
-    }
-
-    #sidebar-wrapper .sidebar-heading i {
-        /* Ensure icon is visible */
-        display: inline;
-    }
-
-    #sidebar-wrapper .list-group-item .sidebar-text {
-         display: inline; /* Text is always visible when sidebar is shown on small screens */
-    }
-
-    #page-content-wrapper {
-        min-width: 100vw;
-        width: 100%;
-    }
-
-    body.sb-sidenav-toggled #page-content-wrapper {
-        overflow-x: hidden;
-    }
-
-    .container-fluid {
-        padding: 1rem;
-    }
-    
-    .table-responsive {
-        margin: 0;
-        overflow-x: auto;
-    }
-    
-    .btn {
-        width: auto;
-        margin-top: 0;
-    }
-
-    .table td {
-        width: 250px;
-    }
-
-    .pagination {
-        justify-content: flex-start;
-        overflow-x: auto;
-        white-space: nowrap;
-    }
-
-    .page-item {
-        flex-shrink: 0;
-    }
-
-    .navbar .d-flex.mx-auto {
-        max-width: 100%;
-    }
 }
 

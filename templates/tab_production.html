@@ -17,6 +17,15 @@
         </div>
     </form>
 
+    <!-- Export Button -->
+    <div class="row mb-3">
+        <div class="col text-end">
+             <a href="{{ url_for('data.export_tab_production', search=search) }}" class="btn btn-secondary btn-sm">
+                 <i class="bi bi-download"></i> Export Data
+             </a>
+        </div>
+    </div>
+
     <!-- Data Table -->
     <div class="table-responsive">
         <table class="table table-striped table-bordered">
@@ -40,4 +49,13 @@
     </div>
 
     {% include 'components/pagination.html' %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Adjust button spacing for the export button */
+    .row.mb-3 .col.text-end .btn, .row.mb-3 .col.text-end a.btn {
+        margin-left: 0.5rem;
+    }
+</style>
 {% endblock %} 
