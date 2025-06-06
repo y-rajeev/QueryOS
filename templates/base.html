@@ -18,16 +18,16 @@
                 <span style="text-align: center;">QueryOS</span>
             </div>
             <div class="list-group list-group-flush">
-                <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action bg-dark text-white {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                <a href="{{ url_for('main.dashboard') }}" class="list-group-item list-group-item-action bg-dark text-white {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
                     <i class="bi bi-house me-2"></i> <span class="sidebar-text">Dashboard</span>
                 </a>
-                <a href="{{ url_for('cutting') }}" class="list-group-item list-group-item-action bg-dark text-white {% if request.endpoint == 'cutting' %}active{% endif %}">
+                <a href="{{ url_for('data.cutting') }}" class="list-group-item list-group-item-action bg-dark text-white {% if request.endpoint == 'data.cutting' %}active{% endif %}">
                     <i class="bi bi-scissors me-2"></i> <span class="sidebar-text">Cutting Data</span>
                 </a>
-                <a href="{{ url_for('tab_production') }}" class="list-group-item list-group-item-action bg-dark text-white {% if request.endpoint == 'tab_production' %}active{% endif %}">
+                <a href="{{ url_for('data.tab_production') }}" class="list-group-item list-group-item-action bg-dark text-white {% if request.endpoint == 'data.tab_production' %}active{% endif %}">
                     <i class="bi bi-grid me-2"></i> <span class="sidebar-text">Production Data</span>
                 </a>
-                <a href="{{ url_for('production_data') }}" class="list-group-item list-group-item-action bg-dark text-white {% if request.endpoint == 'production_data' %}active{% endif %}">
+                <a href="{{ url_for('data.production_data') }}" class="list-group-item list-group-item-action bg-dark text-white {% if request.endpoint == 'data.production_data' %}active{% endif %}">
                     <i class="bi bi-table me-2"></i> <span class="sidebar-text">Dispatch Data</span>
                </a>
                 <a href="#" class="list-group-item list-group-item-action bg-dark text-white">
@@ -41,10 +41,10 @@
             <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
                 <div class="container-fluid">
                     {# Moved sidebar toggle button into sidebar #}
-                     <a class="navbar-brand" href="{{ url_for('dashboard') }}">QueryOS</a>
+                     <a class="navbar-brand" href="{{ url_for('main.dashboard') }}">QueryOS</a>
 
                     {# Search Form (Centered) #}
-                    <form class="d-flex mx-auto my-2 my-lg-0" role="search" action="{{ url_for('production_data') }}" method="get">
+                    <form class="d-flex mx-auto my-2 my-lg-0" role="search" action="{{ url_for('data.production_data') }}" method="get">
                         <input class="form-control me-2" type="search" placeholder="Search Production Data" aria-label="Search" name="search">
                         <button class="btn btn-outline-success" type="submit">Search</button>
                     </form>
@@ -92,5 +92,6 @@
 
         });
     </script>
+    {% block scripts %}{% endblock %}
 </body>
 </html> 
