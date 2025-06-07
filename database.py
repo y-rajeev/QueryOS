@@ -24,12 +24,15 @@ def init_db(app) -> None:
     """
     global connection_pool
     
+    print("[DEBUG] init_db called.") # DEBUG
     if connection_pool is not None:
         logger.info("Connection pool already initialized")
+        print("[DEBUG] Connection pool already initialized.") # DEBUG
         return
         
     try:
         logger.info("Initializing connection pool...")
+        print("[DEBUG] Attempting to create connection pool...") # DEBUG
         connection_pool = psycopg2.pool.SimpleConnectionPool(
             minconn=1,
             maxconn=10,
@@ -39,8 +42,10 @@ def init_db(app) -> None:
             password=app.config['DB_PASSWORD']
         )
         logger.info("Connection pool initialized successfully")
+        print("[DEBUG] Connection pool initialized successfully.") # DEBUG
     except Exception as e:
         logger.error(f"Error creating connection pool: {str(e)}")
+        print(f"[DEBUG] Error creating connection pool: {e}") # DEBUG
         raise
 
 @contextmanager
@@ -55,20 +60,24 @@ def get_db_connection():
         Exception: If connection pool is not initialized or connection fails
     """
     if connection_pool is None:
+        print("[DEBUG] get_db_connection: connection_pool is None, raising error.") # DEBUG
         raise Exception("Database connection pool not initialized")
         
     conn = None
     try:
         conn = connection_pool.getconn()
         logger.debug("Got connection from pool")
+        print("[DEBUG] Got connection from pool.") # DEBUG
         yield conn
     except Exception as e:
         logger.error(f"Error getting connection from pool: {str(e)}")
+        print(f"[DEBUG] Error getting connection from pool: {e}") # DEBUG
         raise
     finally:
         if conn is not None:
             connection_pool.putconn(conn)
             logger.debug("Connection returned to pool")
+            print("[DEBUG] Connection returned to pool.") # DEBUG
 
 def close_db_connection(conn) -> None:
     """

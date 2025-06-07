@@ -43,7 +43,7 @@
                         <li><a class="dropdown-item" href="#" data-column-view="all">All Columns</a></li>
                     </ul>
                 </div>
-                <button class="btn btn-secondary btn-sm" title="Refresh Data" onclick="window.location.reload();">
+                <button class="btn btn-secondary btn-sm" title="Refresh Data" onclick="window.location.reload(); showLoading();">
                     <i class="bi bi-arrow-clockwise"></i>
                 </button>
                 <div class="dropdown">
@@ -51,7 +51,7 @@
                         <i class="bi bi-three-dots"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
-                        <li><a class="dropdown-item" href="{{ url_for('data.export_cutting', search=search) }}"><i class="bi bi-download me-2"></i> Export Data</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('data.export_cutting', search=search) }}" onclick="showLoading();"><i class="bi bi-download me-2"></i> Export Data</a></li>
                         <li><button class="dropdown-item" id="deleteSelectedBtnDropdown"><i class="bi bi-trash me-2"></i> Delete Selected Record</button></li>
                     </ul>
                 </div>
@@ -64,7 +64,7 @@
         <!-- Search Input Section -->
         <div class="row">
             <div class="col-12 col-md-6">
-                <form method="get" class="d-flex">
+                <form method="get" class="d-flex" onsubmit="showLoading();">
                     <input type="text" class="form-control form-control-sm me-2" name="search" placeholder="Search cutting data..." value="{{ search }}">
                     <button type="submit" class="btn btn-primary btn-sm">Search</button>
                 </form>
@@ -156,7 +156,7 @@
                     <h5 class="modal-title">Add New Cutting Record</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ url_for('data.add_cutting') }}" method="POST">
+                <form action="{{ url_for('data.add_cutting') }}" method="POST" onsubmit="showLoading();">
                     <div class="modal-body">
                         <div class="row g-3">
                             {# Input fields for adding new record #}
@@ -231,7 +231,7 @@
                     <h5 class="modal-title">Edit Cutting Record</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form id="editForm" method="POST">
+                <form id="editForm" method="POST" onsubmit="showLoading();">
                      <div class="modal-body">
                         <div class="row g-3">
                             {# Input fields for editing record #}
@@ -502,6 +502,7 @@
 
         // Handle confirmation of bulk delete
         confirmBulkDeleteBtn.addEventListener('click', function() {
+            showLoading(); // Show loader on bulk delete
             const idsToDelete = Array.from(selectedRows);
             // Close confirmation modal immediately
             deleteConfirmModal.hide();

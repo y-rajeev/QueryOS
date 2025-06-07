@@ -23,7 +23,7 @@
                         <li><a class="dropdown-item" href="#" data-column-view="all">All Columns</a></li>
                     </ul>
                 </div>
-                <button class="btn btn-secondary btn-sm" title="Refresh Data" onclick="window.location.reload();">
+                <button class="btn btn-secondary btn-sm" title="Refresh Data" onclick="window.location.reload(); showLoading();">
                     <i class="bi bi-arrow-clockwise"></i>
                 </button>
                 <div class="dropdown">
@@ -31,7 +31,7 @@
                         <i class="bi bi-three-dots"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButtonDispatch">
-                        <li><a class="dropdown-item" href="{{ url_for('data.export_production', search=search) }}"><i class="bi bi-download me-2"></i> Export Data</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('data.export_production', search=search) }}" onclick="showLoading();"><i class="bi bi-download me-2"></i> Export Data</a></li>
                         <li><button class="dropdown-item" id="deleteSelectedBtnDispatch"><i class="bi bi-trash me-2"></i> Delete Selected Record</button></li>
                     </ul>
                 </div>
@@ -44,7 +44,7 @@
         <!-- Search Input Section -->
         <div class="row">
             <div class="col-12 col-md-6">
-                <form method="get" class="d-flex">
+                <form method="get" class="d-flex" onsubmit="showLoading();">
                     <input type="text" class="form-control form-control-sm me-2" name="search" placeholder="Search across all columns..." value="{{ search }}">
                     <button type="submit" class="btn btn-primary btn-sm">Search</button>
                 </form>
