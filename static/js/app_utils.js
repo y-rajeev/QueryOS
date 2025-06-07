@@ -19,6 +19,14 @@ document.addEventListener('DOMContentLoaded', function() {
     window.hideLoading();
 });
 
+// Ensure loading overlay is hidden when page is shown (even from bfcache)
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        // Page is loading from bfcache
+        window.hideLoading();
+    }
+});
+
 // Show loading when navigating away (e.g., form submission, link click)
 window.addEventListener('beforeunload', function() {
     window.showLoading();

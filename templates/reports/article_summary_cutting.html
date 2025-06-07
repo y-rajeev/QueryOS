@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Article Summary Cutting Report - QueryOS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-container {
+        position: relative;
+        height: 500px;
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-4">Article Summary Cutting Report</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.reports') }}">Reports</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Article Summary Cutting</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-4">
+            <label for="monthSelect" class="form-label">Select Month:</label>
+            <select class="form-select" id="monthSelect" onchange="window.location.href = this.dataset.baseUrl + this.value;">
+                {% for month in available_months %}
+                    <option value="{{ month }}" {% if month == selected_month %}selected{% endif %}>{{ month }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    Product Cutting Summary for {{ selected_month if selected_month else 'Selected Month' }}
+                </div>
+                <div class="card-body">
+                    {% if labels %}
+                    <div class="chart-container">
+                        <canvas id="articleSummaryCuttingBarChart"></canvas>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted">No data available for the selected month or no cutting data yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if labels %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    Data Table for {{ selected_month if selected_month else 'Selected Month' }}
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr class="table-primary">
+                                    <th>Product</th>
+                                    <th>Produced Quantity</th>
+                                    <th>Rejection Quantity</th>
+                                    <th>Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in range(labels|length) %}
+                                <tr>
+                                    <td>{{ labels[i] }}</td>
+                                    <td>{{ quantities[i] }}</td>
+                                    <td>{{ rejection_data[i] }}</td>
+                                    <td>{{ production_percentage_data[i] }}</td>
+                                </tr>
+                                {% endfor %}
+                                {% if total_produced_qty > 0 %}
+                                <tr class="table-secondary fw-bold">
+                                    <td>Total</td>
+                                    <td>{{ total_produced_qty }}</td>
+                                    <td></td> {# Empty cell for percentage total #}
+                                    <td>100.00%</td> {# Total percentage always 100% #}
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Under Development Message -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-tools me-3 display-6"></i>
+                    <div>
+                        <h4 class="alert-heading">Under Development</h4>
+                        <p class="mb-0">This report is under development. More features and real data integration coming soon!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const labels = JSON.parse('{{ labels | tojson | safe }}');
+        const quantities = JSON.parse('{{ quantities | tojson | safe }}');
+        const rejection_data = JSON.parse('{{ rejection_data | tojson | safe }}');
+        const production_percentage_data = JSON.parse('{{ production_percentage_data | tojson | safe }}');
+
+        const monthSelect = document.getElementById('monthSelect');
+        monthSelect.dataset.baseUrl = '{{ url_for('main.article_cutting_summary_report') }}?month=';
+
+        if (labels.length > 0) {
+            new Chart(document.getElementById('articleSummaryCuttingBarChart'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Produced Quantity',
+                        data: quantities,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: 'Rejection Quantity',
+                        data: rejection_data,
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Product-wise Cutting Summary'
+                        },
+                        legend: {
+                            display: true // Display legend for multiple datasets
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: false, // For grouped bars
+                            title: {
+                                display: true,
+                                text: 'Product'
+                            }
+                        },
+                        y: {
+                            stacked: false, // For grouped bars
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Units'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

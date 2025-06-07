@@ -13,16 +13,16 @@
     <div class="row g-4">
         <!-- Production Reports Card -->
         <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
+            <div class="card h-100 shadow-sm report-card">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
                         <i class="bi bi-file-earmark-text display-6 text-primary me-3"></i>
                         <h5 class="card-title mb-0">Production Reports</h5>
                     </div>
                     <p class="card-text text-muted">View detailed reports about production metrics, efficiency, and output.</p>
-                    <div class="mt-3">
-                        <a href="{{ url_for('main.monthly_production_report') }}" class="btn btn-primary btn-sm">Monthly Production</a>
-                        <span class="badge bg-info ms-2">Coming Soon</span>
+                    <div class="list-group list-group-flush mt-3">
+                        <a href="{{ url_for('main.monthly_production_report') }}" class="list-group-item list-group-item-action">Monthly Production</a>
+                        <a href="{{ url_for('main.article_summary_report') }}" class="list-group-item list-group-item-action">Article Summary</a>
                     </div>
                 </div>
             </div>
@@ -30,15 +30,16 @@
 
         <!-- Cutting Reports Card -->
         <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
+            <div class="card h-100 shadow-sm report-card">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
                         <i class="bi bi-scissors display-6 text-primary me-3"></i>
                         <h5 class="card-title mb-0">Cutting Reports</h5>
                     </div>
                     <p class="card-text text-muted">Access cutting phase analytics, material usage, and efficiency reports.</p>
-                    <div class="mt-3">
-                        <span class="badge bg-info">Coming Soon</span>
+                    <div class="list-group list-group-flush mt-3">
+                        <a href="{{ url_for('main.monthly_cutting_report') }}" class="list-group-item list-group-item-action">Monthly Cutting</a>
+                        <a href="{{ url_for('main.article_cutting_summary_report') }}" class="list-group-item list-group-item-action">Article Summary</a>
                     </div>
                 </div>
             </div>
@@ -46,18 +47,20 @@
 
         <!-- Order Reports Card -->
         <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="bi bi-cart-check display-6 text-primary me-3"></i>
-                        <h5 class="card-title mb-0">Order Reports</h5>
-                    </div>
-                    <p class="card-text text-muted">Track order status, fulfillment metrics, and delivery performance.</p>
-                    <div class="mt-3">
-                        <span class="badge bg-info">Coming Soon</span>
+            <a href="{{ url_for('main.reports') }}" class="text-decoration-none text-dark">
+                <div class="card h-100 shadow-sm report-card coming-soon-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-cart-check display-6 text-primary me-3"></i>
+                            <h5 class="card-title mb-0">Order Reports</h5>
+                        </div>
+                        <p class="card-text text-muted">Track order status, fulfillment metrics, and delivery performance.</p>
+                        <div class="mt-3">
+                            <span class="badge bg-info">Coming Soon</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 
@@ -76,4 +79,26 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        border: 1px solid #e0e0e0; /* Subtle border for all cards */
+    }
+    .report-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        border-color: #007bff; /* Highlight border on hover */
+    }
+    .coming-soon-card {
+        opacity: 0.7;
+        pointer-events: auto; /* Allow clicks even with opacity */
+        cursor: pointer;
+    }
+    .coming-soon-card:hover {
+        opacity: 1;
+    }
+</style>
 {% endblock %} 
