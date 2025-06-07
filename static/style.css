@@ -6,7 +6,7 @@ html, body {
     margin: 0 !important;
     padding: 0 !important;
     overflow-x: hidden; /* Ensure no horizontal overflow */
-    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    box-sizing: border-box; /* Ensure border-box is applied globally */
     height: 100vh; /* Ensure full viewport height */
 }
 
@@ -14,7 +14,7 @@ html, body {
 body {
     overflow-x: hidden; /* Prevent horizontal scrollbar from appearing due to off-screen content */
     background-color: #f8f9fa;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; /* Modern system font stack */
     padding-left: 0 !important; /* Keep this for consistency, though page-content-wrapper handles margin-left */
     padding-top: 0 !important; /* Remove body padding, it will be handled by page-content-wrapper */
     border: none !important; /* Ensure no border */
@@ -29,26 +29,27 @@ body {
 
 /* Sidebar Styles */
 #sidebar-wrapper {
-    min-height: calc(100vh - 56px); /* Full height minus navbar height. Adjust 56px if navbar height is different. */
-    width: 60px; /* Default collapsed width */
-    background-color: #343a40; /* Dark background */
-    border-right: none !important; /* Remove right border */
-    transition: width .25s ease-out; /* Transition for width change */
-    box-shadow: none !important; /* Remove shadow */
-    position: fixed; /* Fix sidebar position */
-    top: 56px; /* Match navbar height */
+    min-height: calc(100vh - 56px);
+    width: 60px;
+    background-color: #2c3e50; /* Darker, modern background for sidebar */
+    border-right: none !important;
+    transition: width .25s ease-out;
+    box-shadow: 4px 0 8px rgba(0,0,0,0.1); /* Subtle shadow for depth */
+    position: fixed;
+    top: 56px;
     left: 0;
-    z-index: 1000; /* Ensure sidebar is above content */
-    overflow-y: auto; /* Add vertical scroll if menu items exceed height */
-    overflow-x: hidden; /* Hide overflowing text in collapsed state */
-    color: #f8f9fa; /* Light text color for visible items */
-    margin-top: 0 !important; /* Ensure no margin at top */
-    border-top: none !important; /* Explicitly ensure no top border */
+    z-index: 1000;
+    overflow-y: auto;
+    overflow-x: hidden;
+    color: #e0e0e0; /* Lighter text color for contrast */
+    margin-top: 0 !important;
+    border-top: none !important;
 }
 
 #sidebar-wrapper .sidebar-heading {
-    padding: 0 !important; /* Remove all padding */
-    font-size: 1.3rem;
+    padding: 0 !important;
+    font-size: 0 !important; /* Ensure no font size takes up space */
+    line-height: 0 !important; /* Ensure no line height takes up space */
     color: #f8f9fa;
     border-bottom: none !important;
     font-weight: bold;
@@ -56,7 +57,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 56px; /* Match navbar height */
+    height: 0 !important; /* Collapse height to remove blank space */
+    overflow: hidden !important; /* Hide any overflowing content */
     position: relative;
     cursor: pointer;
 }
@@ -67,15 +69,12 @@ body:not(.sb-sidenav-toggled) #sidebar-wrapper .sidebar-heading span {
 }
 
 #sidebar-wrapper .sidebar-heading i {
-    font-size: 1.4rem;
+    font-size: 0 !important; /* Ensure icon font size takes no space */
+    line-height: 0 !important; /* Ensure icon line height takes no space */
     color: #f8f9fa; /* Light icon color */
     flex-shrink: 0;
     transition: color 0.2s ease;
     margin-right: 0; /* Remove margin to help centering when collapsed */
-}
-
-#sidebar-wrapper .sidebar-heading:hover i {
-    color: #ffffff; /* Lighter icon on hover */
 }
 
 #sidebar-wrapper .list-group {
@@ -86,55 +85,61 @@ body:not(.sb-sidenav-toggled) #sidebar-wrapper .sidebar-heading span {
 
 #sidebar-wrapper .list-group-item {
     border: none;
-    padding: 0.6rem 1rem;
-    color: #f8f9fa; /* Light text color */
+    padding: 0.8rem 1rem; /* Increased vertical padding for better touch targets */
+    color: #e0e0e0; /* Light text color */
     background-color: transparent;
     display: flex;
     align-items: center;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease; /* Add transform to transition */
     font-size: 1rem;
     white-space: nowrap;
     overflow: hidden;
 }
 
 #sidebar-wrapper .list-group-item i {
-    font-size: 1.1rem;
-    margin-right: 0.75rem;
-    color: #f8f9fa; /* Light icon color */
+    font-size: 1.2rem; /* Slightly larger icon size */
+    margin-right: 1rem; /* More space between icon and text */
+    color: #e0e0e0; /* Light icon color */
     flex-shrink: 0;
 }
 
 #sidebar-wrapper .list-group-item .sidebar-text {
      display: none; /* Hide text by default in collapsed state */
      flex-grow: 1;
-     transition: opacity 0.1s ease;
+     transition: opacity 0.2s ease; /* Slightly slower opacity transition */
 }
 
 #sidebar-wrapper .list-group-item:hover {
-    background-color: rgba(255,255,255,0.1); /* Semi-transparent white on hover */
+    background-color: rgba(255,255,255,0.15); /* Slightly stronger hover effect */
     color: #ffffff; /* White text on hover */
-    transform: translateX(3px);
+    transform: translateX(5px); /* More pronounced hover effect */
 }
 
 #sidebar-wrapper .list-group-item.active {
-    background-color: rgba(255,255,255,0.2); /* More semi-transparent white for active */
+    background-color: rgba(255,255,255,0.25); /* Stronger active effect */
     color: #ffffff; /* White text for active */
-    font-weight: 600;
+    font-weight: 600; /* Bolder for active item */
+    border-left: 4px solid #1a73e8; /* Accent border for active item */
+    padding-left: 0.75rem; /* Adjust padding due to new border */
 }
 
 /* Page content wrapper styles */
 #page-content-wrapper {
     flex-grow: 1;
-    margin-left: 60px; /* Space for collapsed sidebar */
+    margin-left: 60px;
     padding: 0;
     transition: margin-left .25s ease-out;
-    /* Ensure content starts below the fixed navbar */
-    margin-top: 0;
-    padding-top: 56px; /* Add padding to account for fixed navbar height */
+    margin-top: 0 !important; /* Ensure no top margin */
+    padding-top: 56px !important; /* Ensure content starts below the fixed navbar */
 }
 
 #page-content-wrapper .container-fluid {
-    padding: 1.5rem;
+    padding: 0 !important; /* Set to absolute minimum padding to remove all internal space */
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-top: 0 !important; /* Ensure no margin below navbar from container-fluid */
+    margin-bottom: 0 !important; /* Ensure no margin at bottom from container-fluid */
 }
 
 /* Toggled state - Sidebar expanded */
@@ -144,7 +149,7 @@ body.sb-sidenav-toggled #sidebar-wrapper {
 
 body.sb-sidenav-toggled #sidebar-wrapper .sidebar-text {
     display: inline; /* Show text in expanded state */
-    opacity: 1; /* Ensure text is visible if using opacity transition */
+    opacity: 1;
 }
 
 body.sb-sidenav-toggled #page-content-wrapper {
@@ -153,121 +158,121 @@ body.sb-sidenav-toggled #page-content-wrapper {
 
 /* Ensure content wrapper takes remaining width */
 #page-content-wrapper {
-    width: calc(100% - 60px); /* Default width */
+    width: calc(100% - 60px);
 }
 
 body.sb-sidenav-toggled #page-content-wrapper {
-    width: calc(100% - 250px); /* Adjusted width when sidebar is expanded */
+    width: calc(100% - 250px);
 }
 
 /* Navbar Styles */
 .navbar {
-    box-shadow: none !important; /* Ensure no shadow */
+    box-shadow: 0 4px 8px rgba(0,0,0,.08); /* Softer, more prominent shadow */
     margin-bottom: 0 !important;
-    background-color: #0d6efd !important; /* Blue background color */
-    border-bottom: none !important; /* Ensure no bottom border */
-    padding: 0 !important; /* Remove padding */
-    position: fixed; /* Make navbar fixed */
+    background-color: #1a73e8 !important; /* A slightly deeper, more vibrant blue */
+    background: linear-gradient(to right, #1a73e8, #0a58ca) !important; /* Subtle gradient */
+    border-bottom: none !important;
+    padding: 0 !important;
+    position: fixed;
     top: 0;
-    left: 0; /* Ensure navbar starts from the left edge */
-    width: 100%; /* Full width */
-    z-index: 1030; /* Ensure navbar is above sidebar and content */
-    height: 56px; /* Explicitly set navbar height */
-    outline: none !important; /* Remove any potential outline */
+    left: 0;
+    width: 100%;
+    z-index: 1030;
+    height: 56px;
+    outline: none !important;
 }
 
 .navbar .container-fluid {
-    padding-right: 0.5rem; /* Adjust horizontal padding */
-    padding-left: 0.5rem;  /* Adjust horizontal padding */
-    align-items: center; /* Vertically align items */
+    padding-right: 1rem; /* Increase horizontal padding */
+    padding-left: 1rem;  /* Increase horizontal padding */
+    align-items: center;
 }
 
 /* Style for the top sidebar toggle button */
 #sidebarToggleTop {
     color: #ffffff; /* White icon color */
-    background-color: transparent; /* No background */
-    border: none; /* Remove border */
-    padding: 0.5rem 0.75rem; /* Adjust padding as needed */
-    font-size: 1.25rem; /* Adjust icon size */
+    background-color: transparent;
+    border: none;
+    padding: 0.5rem 0.75rem;
+    font-size: 1.5rem; /* Slightly larger icon */
     line-height: 1;
     border-radius: 0.35rem;
     transition: all 0.3s ease;
 }
 
 #sidebarToggleTop:hover {
-    color: #ffffff; /* Keep icon white on hover */
-    background-color: rgba(255, 255, 255, 0.1); /* Subtle hover effect */
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.15); /* Slightly stronger hover effect */
     border: none;
 }
 
 .navbar-brand {
-    font-weight: bold;
-    font-size: 1.5rem;
+    font-weight: 600; /* Slightly bolder */
+    font-size: 1.6rem; /* Slightly larger */
     color: #ffffff; /* White text color */
-    margin-left: 0.5rem; /* Space after the toggle button */
-    margin-right: 1rem; /* Space before the search form */
+    margin-left: 1rem; /* More space after the toggle button */
+    margin-right: 1.5rem; /* More space before the search form */
 }
 
 .nav-link {
     font-weight: 500;
-    padding: 0.5rem 1rem;
+    padding: 0.6rem 1.2rem; /* Slightly more padding */
     transition: all 0.3s ease;
-    color: #ffffff !important; /* White text color for nav links */
+    color: #ffffff !important;
 }
 
 .nav-link:hover {
-    background-color: rgba(255,255,255,.1); /* Subtle hover effect */
-    border-radius: 4px;
+    background-color: rgba(255,255,255,.15); /* Slightly stronger hover effect */
+    border-radius: 6px; /* Slightly more rounded */
     color: #ffffff !important;
 }
 
 .nav-link.active {
-    background-color: rgba(255,255,255,.2); /* Subtle active effect */
-    border-radius: 4px;
+    background-color: rgba(255,255,255,.25); /* Slightly stronger active effect */
+    border-radius: 6px; /* Slightly more rounded */
     color: #ffffff !important;
 }
 
 /* Search bar in Navbar */
 .navbar .d-flex.mx-auto {
-    flex-grow: 1; /* Allows the form to take available space */
-    max-width: 400px; /* Limit max width of search form */
+    flex-grow: 1;
+    max-width: 500px; /* Increase max width of search form */
     margin-left: auto !important;
     margin-right: auto !important;
-    /* Remove or reduce vertical margins around the search form */
     margin-top: 0 !important;
     margin-bottom: 0 !important;
-    /* Use Bootstrap's gx-2 or similar classes in HTML for gap between input and button */
-    align-items: center; /* Vertically align items within the form */
+    align-items: center;
 }
 
 .navbar .d-flex.mx-auto .form-control {
-    font-size: 0.9rem;
-    padding: 0.25rem 0.5rem; /* Reduced vertical and horizontal padding */
-    background-color: rgba(255, 255, 255, 0.9); /* Slightly transparent white background */
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    color: #333; /* Dark text color for input */
-    border-radius: 0.25rem;
+    font-size: 1rem; /* Slightly larger font size */
+    padding: 0.4rem 0.8rem; /* Adjusted padding */
+    background-color: #ffffff; /* Solid white background for contrast */
+    border: 1px solid #cceeff; /* Lighter border color */
+    color: #333;
+    border-radius: 0.5rem; /* More rounded corners */
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); /* Subtle inner shadow */
 }
 
 .navbar .d-flex.mx-auto .form-control::placeholder {
-    color: #666; /* Darker grey for placeholder */
+    color: #888; /* Softer placeholder color */
     opacity: 1;
 }
 
 .navbar .d-flex.mx-auto .btn {
-     font-size: 0.9rem;
-     padding: 0.25rem 0.5rem; /* Reduced vertical and horizontal padding */
+     font-size: 1rem; /* Slightly larger font size */
+     padding: 0.4rem 1.2rem; /* Adjusted padding */
+     border-radius: 0.5rem; /* More rounded corners */
 }
 
 .navbar .d-flex.mx-auto .btn-outline-success {
-    color: #0d6efd; /* Blue text color */
-    background-color: #ffffff; /* White background */
-    border-color: #ffffff; /* White border */
-    border-radius: 0.25rem;
+    color: #ffffff; /* White text color */
+    background-color: #0d6efd; /* Blue background */
+    border-color: #0d6efd; /* Blue border */
 }
 
 .navbar .d-flex.mx-auto .btn-outline-success:hover {
-    color: #ffffff; /* White text on hover */
+    color: #ffffff;
     background-color: #0a58ca; /* Slightly darker blue on hover */
     border-color: #0a58ca;
 }
@@ -383,89 +388,100 @@ body.sb-sidenav-toggled #page-content-wrapper {
 
 /* Form Styles (General - already in your CSS) */
 .form-control {
-    padding: 0.75rem 1rem;
-    border-radius: 6px;
-    border: 1px solid #ced4da;
+    padding: 0.75rem 1.1rem; /* Slightly more horizontal padding */
+    border-radius: 8px;
+    border: 1px solid #dcdcdc; /* Lighter default border */
     transition: all 0.3s ease;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.075); /* Subtle inner shadow */
+}
+
+.form-control:hover {
+    border-color: #c0c0c0; /* Slightly darker on hover */
 }
 
 .form-control:focus {
-    border-color: #80bdff;
-    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    border-color: #80bdff; /* Standard blue focus */
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25), inset 0 1px 2px rgba(0,0,0,0.075); /* Retain inner shadow on focus */
 }
 
 /* Table Styles (General - already in your CSS) */
 .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.75rem; /* More padding for scrollbar */
 }
 
 .table {
-    background-color: white;
-    box-shadow: 0 1px 3px rgba(0,0,0,.1);
-    border-radius: 8px;
+    background-color: #ffffff;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border-radius: 14px;
     overflow: hidden;
-    /* table-layout: fixed; */ /* Keep this commented out */
     width: 100%;
-    border-collapse: separate; /* Needed for border-radius on table */
-    border-spacing: 0; /* Needed for border-radius on table */
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 1.5rem; /* Reduced space above table */
+    margin-bottom: 2.5rem;
+    border: 1px solid #f0f0f0;
 }
 
 /* Apply border-radius to the corners of the table */
 .table thead tr:first-child th:first-child {
-    border-top-left-radius: 8px;
+    border-top-left-radius: 13px; /* Adjust to match new table border-radius -1px */
 }
 
 .table thead tr:first-child th:last-child {
-    border-top-right-radius: 8px;
+    border-top-right-radius: 13px; /* Adjust to match new table border-radius -1px */
 }
 
 .table tbody tr:last-child td:first-child {
-    border-bottom-left-radius: 8px;
+    border-bottom-left-radius: 13px; /* Adjust to match new table border-radius -1px */
 }
 
 .table tbody tr:last-child td:last-child {
-    border-bottom-right-radius: 8px;
+    border-bottom-right-radius: 13px; /* Adjust to match new table border-radius -1px */
 }
 
 .table thead th {
-    background-color: #343a40;
-    color: white;
-    border: none; /* Remove default borders */
-    padding: 0.75rem 1rem; /* Adjusted padding */
-    font-weight: 500;
+    background-color: #3f51b5; /* A slightly warmer dark blue for headers (Material Design inspired) */
+    color: #ffffff;
+    border: none;
+    padding: 1.2rem 1.8rem; /* Even more padding for table headers */
+    font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    vertical-align: middle; /* Align header text vertically */
+    vertical-align: middle;
+    text-transform: uppercase;
+    font-size: 0.95rem; /* Slightly larger font for headers */
+    letter-spacing: 0.7px; /* Slightly more letter spacing */
 }
 
 .table tbody tr:nth-of-type(odd) {
-    background-color: rgba(0,0,0,.02);
-}
-
-.table td {
-    padding: 0.4rem 1rem; /* Reduced vertical padding */
-    vertical-align: middle;
-    white-space: nowrap; /* Prevent text wrapping */
-    overflow: hidden; /* Hide overflowing content */
-    text-overflow: ellipsis; /* Show ellipsis for truncated text */
-    border-top: 1px solid #dee2e6;
+    background-color: #fcfdfe;
 }
 
 .table tbody tr:hover {
-    background-color: rgba(0,0,0,.05);
+    background-color: #eef5f9; /* Slightly brighter hover effect */
+}
+
+.table td {
+    padding: 1rem 1.8rem; /* Slightly more padding for table cells */
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-top: 1px solid #f5f5f5; /* Even lighter cell borders */
 }
 
 .table td:first-child, .table th:first-child {
     width: 1%;
     white-space: nowrap;
-    padding: 0.4rem 0.5rem 0.4rem 1rem; /* Adjusted padding for first column */
-    border-right: 1px solid #dee2e6;
+    padding: 1rem 0.9rem 1rem 1.8rem; /* Adjusted padding for first column */
+    border-right: 1px solid #f5f5f5; /* Lighter right border */
 }
 
 .table th:last-child, .table td:last-child {
-    border-left: 1px solid #dee2e6;
+    border-left: 1px solid #f5f5f5; /* Lighter left border */
 }
 
 /* Adjust width for specific columns if needed - use percentages or min/max width */
@@ -481,62 +497,187 @@ body.sb-sidenav-toggled #page-content-wrapper {
      width: 15%;
 }
 
+.row.mb-3.align-items-center {
+    margin-bottom: 0.2rem !important; /* Absolutely minimum margin for buttons */
+}
+
 .row.mb-3.align-items-center .justify-content-end .btn {
-    margin-left: 0.5rem; /* Space between buttons */
+    margin-left: 0.85rem; /* More space between buttons */
+    padding: 0.75rem 1.6rem; /* Adjusted button padding */
+    font-size: 1rem; /* Consistent font size */
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Subtle shadow */
+}
+
+.row.mb-3.align-items-center .justify-content-end .btn:hover {
+    box-shadow: 0 5px 10px rgba(0,0,0,0.15); /* More pronounced shadow on hover */
 }
 
 /* Button Styles (General - already in your CSS) */
 .btn {
-    padding: 0.75rem 1.5rem;
+    padding: 0.8rem 1.6rem; /* Slightly more padding */
     font-weight: 500;
-    border-radius: 6px;
+    border-radius: 8px;
     transition: all 0.3s ease;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1); /* Slightly more pronounced subtle shadow for all buttons */
+}
+
+.btn:hover {
+    box-shadow: 0 6px 12px rgba(0,0,0,0.18); /* More pronounced shadow on hover */
+    transform: translateY(-3px); /* Consistent lift effect */
 }
 
 .btn-primary {
-    background-color: #007bff;
-    border-color: #007bff;
+    background-color: #1a73e8; /* Keep original blue */
+    border-color: #1a73e8;
+    color: #ffffff;
 }
 
 .btn-primary:hover {
-    background-color: #0069d9;
-    border-color: #0062cc;
-    transform: translateY(-1px);
+    background-color: #0a58ca;
+    border-color: #0a58ca;
+    transform: translateY(-3px);
+}
+
+/* Specific button styles for actions */
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: #ffffff;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+    transform: translateY(-2px);
+}
+
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: #ffffff;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: #6c757d; /* Standard grey for secondary actions */
+    border-color: #6c757d;
+    color: #ffffff;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+    transform: translateY(-2px);
+}
+
+/* Adjust padding for search button */
+.row.mb-3.align-items-center .justify-content-end .btn {
+    margin-left: 0.75rem;
+    padding: 0.7rem 1.5rem; /* Adjusted button padding */
+    font-size: 1rem; /* Consistent font size */
+    border-radius: 8px; /* More rounded */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow */
+}
+
+.row.mb-3.align-items-center .justify-content-end .btn:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15); /* More pronounced shadow on hover */
 }
 
 /* Pagination Styles (General - already in your CSS) */
 .pagination {
-    margin-top: 2rem;
+    margin-top: 3.5rem; /* More space above pagination */
     flex-wrap: wrap;
     justify-content: center;
+    gap: 0.7rem; /* Slightly more gap between page items */
 }
 
 .page-item {
-    margin: 0 2px;
+    margin: 0; /* Remove individual margins as gap handles spacing */
 }
 
 .page-link {
-    color: #007bff;
-    padding: 0.75rem 1rem;
-    border-radius: 4px;
+    color: #1a73e8;
+    padding: 0.9rem 1.3rem; /* Slightly more padding */
+    border-radius: 8px;
     transition: all 0.3s ease;
+    border: 1px solid #e0e0e0; /* Lighter, subtle border */
 }
 
 .page-link:hover {
-    background-color: #e9ecef;
-    transform: translateY(-1px);
+    background-color: #1a73e8;
+    color: #ffffff;
+    transform: translateY(-3px); /* More pronounced lift effect */
+    border-color: #1a73e8;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.12); /* More prominent shadow on hover */
 }
 
 .page-item.active .page-link {
-    background-color: #007bff;
-    border-color: #007bff;
+    background-color: #1a73e8;
+    border-color: #1a73e8;
+    color: #ffffff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.18); /* Stronger shadow for active page */
 }
 
 /* Heading Styles (General - already in your CSS) */
 h2 {
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    margin-bottom: 2rem;
-    color: #2c3e50;
+    font-weight: 700;
+    letter-spacing: 0.9px;
+    margin-top: 0 !important; /* Remove top margin to shift header up */
+    margin-bottom: 0.2rem; /* Absolutely minimum margin below heading */
+    color: #212121;
+    text-align: left;
+    font-size: 2.6rem;
+}
+
+/* Search input and button group in main content */
+.input-group {
+    margin-bottom: 0.2rem; /* Absolutely minimum space below search group */
+}
+
+.input-group .form-control {
+    border-radius: 0.6rem 0 0 0.6rem; /* Slightly more rounded */
+    border-right: none;
+    padding: 0.75rem 1.2rem; /* Adjusted padding for better visual balance */
+    font-size: 1rem;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.06); /* Subtle inner shadow */
+}
+
+.input-group .form-control:focus {
+    z-index: 3;
+}
+
+.input-group .btn {
+    border-radius: 0 0.6rem 0.6rem 0; /* Slightly more rounded */
+    border-left: none;
+    padding: 0.75rem 1.4rem; /* Adjusted padding for better visual balance */
+    font-size: 1rem;
+    z-index: 2;
+    position: relative;
+}
+
+/* Ensure the search button matches the primary button style from the navbar search */
+.input-group .btn-primary {
+    background-color: #1a73e8;
+    border-color: #1a73e8;
+    color: #ffffff;
+}
+
+.input-group .btn-primary:hover {
+    background-color: #0a58ca;
+    border-color: #0a58ca;
+}
+
+/* Flash message adjustments */
+.alert {
+    margin-top: 0 !important; /* Remove top margin from alerts */
+    margin-bottom: 0 !important; /* Remove bottom margin from alerts */
+    padding-top: 0.5rem; /* Adjust alert padding if needed after margin removal */
+    padding-bottom: 0.5rem; /* Adjust alert padding if needed after margin removal */
 }
 

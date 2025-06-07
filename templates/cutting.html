@@ -23,7 +23,7 @@
 {% endblock %}
 
 {% block content %}
-    <h2 class="text-center text-primary mb-4">Cutting Data</h2>
+    <h2 class="text-start text-primary mt-0 mb-0">Cutting Data</h2>
 
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -38,7 +38,7 @@
     {% endwith %}
 
     <!-- Search, Bulk Actions, and Add Button -->
-    <div class="row mb-3 align-items-center">
+    <div class="row mt-0 mb-0 align-items-center">
         <div class="col-md-6">
             <form method="get" class="d-flex">
                 <input type="text" class="form-control form-control-sm me-2" name="search" placeholder="Search cutting data..." value="{{ search }}">
@@ -47,13 +47,13 @@
         </div>
         <div class="col-md-6 text-end d-flex justify-content-end">
              <a href="{{ url_for('data.export_cutting', search=search) }}" class="btn btn-secondary btn-sm">
-                 <i class="bi bi-download"></i> Export Data
+                 <i class="bi bi-download"></i> Export
              </a>
             <button id="deleteSelectedBtn" class="btn btn-danger btn-sm" disabled>
-                 <i class="bi bi-trash"></i> Delete Selected
+                 <i class="bi bi-trash"></i> Delete
             </button>
             <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addModal">
-                <i class="bi bi-plus-lg"></i> Add New Record
+                <i class="bi bi-plus-lg"></i> Add New
             </button>
         </div>
     </div>

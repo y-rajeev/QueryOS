@@ -115,7 +115,7 @@ def production_data():
         page = max(1, min(int(request.args.get("page", 1)), 9999))
     except ValueError:
         page = 1
-    limit = int(request.args.get("limit", 10))
+    limit = int(request.args.get("limit", 20))
     
     data = get_paginated_data(TABLES["production"], search, page, limit)
     return render_template("production_data.html", **data)
@@ -127,7 +127,7 @@ def cutting():
         page = max(1, min(int(request.args.get("page", 1)), 9999))
     except ValueError:
         page = 1
-    limit = int(request.args.get("limit", 10))
+    limit = int(request.args.get("limit", 20))
     
     data = get_paginated_data(TABLES["cutting"], search, page, limit)
     return render_template("cutting.html", **data)
@@ -305,7 +305,7 @@ def tab_production():
         page = max(1, min(int(request.args.get("page", 1)), 9999))
     except ValueError:
         page = 1
-    limit = int(request.args.get("limit", 10))
+    limit = int(request.args.get("limit", 20))
     
     data = get_paginated_data(TABLES["tab_production"], search, page, limit)
     return render_template("tab_production.html", **data)
