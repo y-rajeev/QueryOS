@@ -59,8 +59,6 @@ pandas==2.2.3
 passlib==1.7.4
 pluggy==1.6.0
 postgrest==1.0.2
-# Editable install with no version control (productionserver==0.1)
--e e:\productionserver\backend
 propcache==0.3.1
 proto-plus==1.26.0
 protobuf==5.29.3
