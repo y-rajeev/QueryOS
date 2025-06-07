@@ -1,7 +1,7 @@
 <!-- TEMPLATE_UPDATED_INDICATOR_V1 -->
 {% extends "base.html" %}
 
-{% block title %}Cutting Data{% endblock %}
+{% block title %}Cutting Phase{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -27,7 +27,11 @@
     <div class="mb-3"> {# Overall spacing below header #}
         <div class="d-flex justify-content-between align-items-center mb-2">
             <div class="d-flex align-items-center mb-2">
-                <h2 class="me-3">Cutting Data</h2>
+                <h2 class="me-3">Cutting Phase</h2>
+                <form method="get" class="d-flex ms-3" onsubmit="showLoading();">
+                    <input type="text" class="form-control form-control-sm me-2" name="search" placeholder="Search cutting data..." value="{{ search }}">
+                    <button type="submit" class="btn btn-primary btn-sm">Search</button>
+                </form>
             </div>
             <div class="d-flex page-header-actions">
                 <div class="dropdown">
@@ -41,6 +45,9 @@
                 </div>
                 <button class="btn btn-secondary btn-sm" title="Refresh Data" onclick="window.location.reload(); showLoading();">
                     <i class="bi bi-arrow-clockwise"></i>
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#advancedFilterModal" title="Filter Data">
+                    <i class="bi bi-funnel me-1"></i> Filter <span class="badge bg-danger rounded-pill ms-1" id="activeFilterCount">0</span>
                 </button>
                 <div class="dropdown">
                     <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" title="More Actions">
@@ -56,21 +63,65 @@
                 </button>
             </div>
         </div>
+    </div>
 
-        <!-- Search Input Section -->
-        <div class="row">
-            <div class="col-12 col-md-6">
-                <form method="get" class="d-flex" onsubmit="showLoading();">
-                    <input type="text" class="form-control form-control-sm me-2" name="search" placeholder="Search cutting data..." value="{{ search }}">
-                    <button type="submit" class="btn btn-primary btn-sm">Search</button>
-                </form>
-            </div>
-            {# Placeholder for additional filters/buttons on the right, if needed later (like "Image 2" has) #}
-            {# <div class="col-12 col-md-6 d-flex justify-content-end"> #}
-            {#    <button class="btn btn-outline-secondary btn-sm ms-2">Filter</button> #}
-            {#    <button class="btn btn-outline-secondary btn-sm ms-2">Last Updated On</button> #}
-            {# </div> #}
-        </div>
+    <!-- Active Filters Display -->
+    <div id="activeFiltersDisplay" class="mb-3 d-flex flex-wrap align-items-center">
+        {% if current_filters %}
+            {% set active_advanced_filters = [] %}
+            {% for key, value in current_filters.items() %}
+                {% if key.startswith('filter_field_') %}
+                    {% set index = key.split('_')[-1] %}
+                    {% set field = value %}
+                    {% set operator = current_filters['filter_operator_' + index] %}
+                    {% set filter_value = current_filters.get('filter_value_' + index, '') %}
+
+                    {% if operator == 'equal' %}
+                        {% set op_text = '=' %}
+                    {% elif operator == 'not_equal' %}
+                        {% set op_text = '!=' %}
+                    {% elif operator == 'like' %}
+                        {% set op_text = 'LIKE' %}
+                    {% elif operator == 'not_like' %}
+                        {% set op_text = 'NOT LIKE' %}
+                    {% elif operator == 'is_set' %}
+                        {% set op_text = 'IS SET' %}
+                        {% set filter_value = '' %}
+                    {% elif operator == 'not_set' %}
+                        {% set op_text = 'IS NOT SET' %}
+                        {% set filter_value = '' %}
+                    {% elif operator == 'gt' %}
+                        {% set op_text = '>' %}
+                    {% elif operator == 'lt' %}
+                        {% set op_text = '<' %}
+                    {% else %}
+                        {% set op_text = operator %}
+                    {% endif %}
+
+                    {% set filter_label = field.replace('_', ' ').title() ~ ' ' ~ op_text %}
+                    {% if filter_value %}
+                        {% set filter_label = filter_label ~ ' ' ~ filter_value %}
+                    {% endif %}
+                    {% set active_advanced_filters = active_advanced_filters + [filter_label] %}
+                {% endif %}
+            {% endfor %}
+            {% if active_advanced_filters %}
+                <span class="badge bg-info text-dark me-2 mb-2">Active Filters:</span>
+                {% for filter_label in active_advanced_filters %}
+                    <span class="badge bg-primary me-2 mb-2">{{ filter_label }}</span>
+                {% endfor %}
+                <button type="button" class="btn btn-outline-danger btn-sm mb-2" id="clearAllActiveFilters">
+                    <i class="bi bi-x-circle me-1"></i> Clear All
+                </button>
+            {% endif %}
+        {% endif %}
+        {% if search %}
+             <span class="badge bg-info text-dark me-2 mb-2">Search:</span>
+             <span class="badge bg-primary me-2 mb-2">{{ search }}</span>
+             <button type="button" class="btn btn-outline-danger btn-sm mb-2" id="clearSearchFilter">
+                <i class="bi bi-x-circle me-1"></i> Clear Search
+            </button>
+        {% endif %}
     </div>
 
     <!-- Flash Messages -->
@@ -298,253 +349,251 @@
             </div>
         </div>
     </div>
+
+    <!-- Filter Modal -->
+    <div class="modal fade" id="advancedFilterModal" tabindex="-1" aria-labelledby="advancedFilterModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="advancedFilterModalLabel">Filter</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="filterConditions">
+                        <!-- Filter conditions will be added here by JavaScript -->
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm mt-3" id="addFilterCondition">
+                        <i class="bi bi-plus-lg me-1"></i> Add Filter
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-warning" id="clearAdvancedFilter">Clear Filters</button>
+                    <button type="button" class="btn btn-primary" id="applyAdvancedFilter">Apply Filters</button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Get all necessary DOM elements and initialize modals
-        const listViewDropdown = document.getElementById('listViewDropdownCutting');
-        const selectAllCheckbox = document.getElementById('selectAll');
-        const table = document.querySelector('.table'); // Ensure table is selected
-        const rowSelectCheckboxes = document.querySelectorAll('.row-select');
-        const deleteSelectedBtnDropdown = document.getElementById('deleteSelectedBtnDropdown');
-        const confirmBulkDeleteBtn = document.getElementById('confirmBulkDeleteBtn'); 
-        
-        const viewDetailsModal = new bootstrap.Modal(document.getElementById('viewDetailsModal'));
-        const viewDetailsModalBody = document.querySelector('#viewDetailsModal .modal-body');
-        const editFromViewBtn = document.getElementById('editFromViewBtn');
-        const editModal = new bootstrap.Modal(document.getElementById('editModal'));
-        const editForm = document.getElementById('editForm');
-        
-        // Initialize delete confirmation modal only if its element exists
-        let deleteConfirmModal;
-        const deleteConfirmModalElement = document.getElementById('deleteConfirmModal');
-        if (deleteConfirmModalElement) {
-            deleteConfirmModal = new bootstrap.Modal(deleteConfirmModalElement);
-        } else {
-            console.error("Delete confirmation modal element not found!");
-        }
-
-        let selectedRows = new Set(); // Stores IDs of selected rows
-
-        // Function to update the state of the delete button and select-all checkbox
-        function updateSelectionState() {
-            selectedRows.clear();
-            rowSelectCheckboxes.forEach(checkbox => {
-                if (checkbox.checked) {
-                    selectedRows.add(checkbox.closest('tr').dataset.id);
-                }
+    {{ super() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
             });
-            
-            if (deleteSelectedBtnDropdown) {
-                deleteSelectedBtnDropdown.disabled = selectedRows.size === 0;
-            }
 
-            const totalRows = rowSelectCheckboxes.length;
-            const selectedCount = selectedRows.size;
+            const fields = ['date', 'po_no', 'sku', 'product', 'line', 'design', 'size', 'pcs_pack', 'sets', 'produced_qty', 'rejection'];
+            const operators = {
+                'equal': 'Equal',
+                'not_equal': 'Not Equal',
+                'like': 'Like',
+                'not_like': 'Not Like',
+                'is_set': 'Is Set',
+                'not_set': 'Not Set',
+                'gt': '> (Greater Than)',
+                'lt': '< (Less Than)'
+            };
 
-            if (totalRows === 0) {
-                if (selectAllCheckbox) { // Check if selectAllCheckbox exists
-                    selectAllCheckbox.checked = false;
-                    selectAllCheckbox.indeterminate = false;
-                }
-            } else if (selectedCount === 0) {
-                if (selectAllCheckbox) {
-                    selectAllCheckbox.checked = false;
-                    selectAllCheckbox.indeterminate = false;
-                }
-            } else if (selectedCount === totalRows) {
-                if (selectAllCheckbox) {
-                    selectAllCheckbox.checked = true;
-                    selectAllCheckbox.indeterminate = false;
-                }
-            } else {
-                if (selectAllCheckbox) {
-                    selectAllCheckbox.checked = false;
-                    selectAllCheckbox.indeterminate = true;
-                }
-            }
-        }
+            let filterConditionCount = 0; // Global counter for unique IDs
 
-        // List View Dropdown Handler
-        if (listViewDropdown) {
-            listViewDropdown.querySelectorAll('.dropdown-item').forEach(item => {
-                item.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const columnView = this.getAttribute('data-column-view');
-                    console.log('Selected column view:', columnView); // Debug log
-                    
-                    // Get current URL and parameters
-                    const currentUrl = new URL(window.location.href);
-                    const searchParams = new URLSearchParams(currentUrl.search);
-                    
-                    // Update or add column_view parameter
-                    searchParams.set('column_view', columnView);
-                    
-                    // Preserve other parameters
-                    const page = searchParams.get('page') || '1';
-                    const search = searchParams.get('search') || '';
-                    
-                    // Construct new URL
-                    const newUrl = `${currentUrl.pathname}?${searchParams.toString()}`;
-                    console.log('Redirecting to:', newUrl); // Debug log
-                    
-                    // Redirect to new URL
-                    window.location.href = newUrl;
-                });
-            });
-        }
+            function addFilterCondition() {
+                filterConditionCount++;
+                const conditionId = `condition-${filterConditionCount}`;
+                const conditionDiv = document.createElement('div');
+                conditionDiv.classList.add('row', 'g-2', 'mb-2', 'align-items-center', 'filter-condition');
+                conditionDiv.setAttribute('data-condition-id', conditionId);
 
-        // Handle individual row checkbox clicks using event delegation on the table
-        if (table) { // Ensure table element exists
-            table.addEventListener('change', function(event) {
-                if (event.target.classList.contains('row-select')) {
-                    updateSelectionState();
-                }
-            });
-        }
+                let fieldOptions = fields.map(field => `<option value="${field}">${field.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</option>`).join('');
+                let operatorOptions = Object.entries(operators).map(([key, value]) => `<option value="${key}">${value}</option>`).join('');
 
-        // Handle select-all checkbox click
-        if (selectAllCheckbox) { // Ensure selectAllCheckbox exists
-            selectAllCheckbox.addEventListener('change', function(event) {
-                const isChecked = event.target.checked;
-                rowSelectCheckboxes.forEach(checkbox => {
-                    checkbox.checked = isChecked;
-                });
-                updateSelectionState();
-            });
-        }
+                conditionDiv.innerHTML = `
+                    <div class="col-md-4">
+                        <select class="form-select form-select-sm filter-field" data-condition-id="${conditionId}">
+                            ${fieldOptions}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select form-select-sm filter-operator" data-condition-id="${conditionId}">
+                            ${operatorOptions}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" class="form-control form-control-sm filter-value" placeholder="Value" data-condition-id="${conditionId}">
+                    </div>
+                    <div class="col-md-1">
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-filter-condition" data-condition-id="${conditionId}">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                `;
+                document.getElementById('filterConditions').appendChild(conditionDiv);
 
-        // Delete Selected Button (in dropdown) Handler
-        if (deleteSelectedBtnDropdown && deleteConfirmModal) { // Ensure modal is initialized before attaching listener
-            deleteSelectedBtnDropdown.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (selectedRows.size > 0) {
-                    deleteConfirmModal.show(); // Show the confirmation modal
-                } else {
-                    alert('Please select at least one record to delete.');
-                }
-            });
-        }
+                // Add event listener for operator change to hide/show value input
+                const operatorSelect = conditionDiv.querySelector('.filter-operator');
+                const valueInput = conditionDiv.querySelector('.filter-value');
 
-        // Confirm Bulk Delete Button Handler (inside the modal)
-        if (confirmBulkDeleteBtn && deleteConfirmModal) { // Ensure modal is initialized before attaching listener
-            confirmBulkDeleteBtn.addEventListener('click', function() {
-                deleteConfirmModal.hide(); // Hide the modal immediately
-                showLoading(); // Show loading indicator
-
-                fetch("{{ url_for('data.bulk_delete_cutting') }}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ ids: Array.from(selectedRows) })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        // Attempt to parse JSON error message from backend
-                        return response.json().then(err => { throw new Error(err.message || 'Unknown error'); });
+                const handleOperatorChange = () => {
+                    if (operatorSelect.value === 'is_set' || operatorSelect.value === 'not_set') {
+                        valueInput.style.display = 'none';
+                        valueInput.value = ''; // Clear value if hidden
+                    } else {
+                        valueInput.style.display = 'block';
                     }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Delete successful:', data.message);
-                    window.location.reload(); // Refresh the page to show updated data
-                })
-                .catch(error => {
-                    console.error('Error during bulk delete:', error);
-                    hideLoading(); // Hide loading indicator on error
-                    alert('Failed to delete records: ' + error.message); // Show error to user
+                };
+
+                operatorSelect.addEventListener('change', handleOperatorChange);
+                handleOperatorChange(); // Initial call to set correct visibility
+
+                return conditionDiv; // Return the newly created element
+            }
+
+            document.getElementById('addFilterCondition').addEventListener('click', addFilterCondition);
+
+            // Remove filter condition
+            document.getElementById('filterConditions').addEventListener('click', function(event) {
+                if (event.target.classList.contains('remove-filter-condition') || event.target.closest('.remove-filter-condition')) {
+                    const button = event.target.classList.contains('remove-filter-condition') ? event.target : event.target.closest('.remove-filter-condition');
+                    const conditionId = button.dataset.conditionId;
+                    const conditionDiv = document.querySelector(`.filter-condition[data-condition-id="${conditionId}"]`);
+                    if (conditionDiv) {
+                        conditionDiv.remove();
+                        updateActiveFilterCount(); // Update count after removing
+                    }
+                }
+            });
+
+            // Apply filters
+            document.getElementById('applyAdvancedFilter').addEventListener('click', function() {
+                const filterConditions = [];
+                document.querySelectorAll('.filter-condition').forEach(conditionDiv => {
+                    const field = conditionDiv.querySelector('.filter-field').value;
+                    const operator = conditionDiv.querySelector('.filter-operator').value;
+                    const value = conditionDiv.querySelector('.filter-value').value;
+                    filterConditions.push({ field, operator, value });
                 });
-            });
-        }
 
-        // Double-click event listener for table rows (for View Details Modal)
-        const tableBody = document.querySelector('.table tbody');
-        if (tableBody) {
-            tableBody.addEventListener('dblclick', function (event) {
-                const row = event.target.closest('tr');
-                if (row && row.dataset.id && !event.target.classList.contains('row-select')) {
-                    const rowId = row.dataset.id;
-                    console.log('Double-clicked row with ID:', rowId); 
-                    const fetchUrl = `/cutting/details/${rowId}`;
-                    console.log('Fetching details from URL:', fetchUrl); 
-                    fetch(fetchUrl)
-                        .then(response => {
-                            console.log('Received response with status:', response.status); 
-                            if (!response.ok) {
-                                console.error('HTTP error! Status:', response.status);
-                                response.text().then(text => console.error('Response body:', text)).catch(() => console.error('Could not read response body.'));
-                                throw new Error(`HTTP error! status: ${response.status}`);
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            console.log('Successfully fetched data:', data); 
-                            let htmlContent = '<div class="row g-3">';
-                            for (const key in data) {
-                                 if (key !== 'id') {
-                                     const displayKey = key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
-                                     htmlContent += `<div class="col-md-6"><p><strong>${displayKey}:</strong> ${data[key]}</p></div>`;
-                                 }
-                            }
-                            htmlContent += '</div>';
-                            if (viewDetailsModalBody) {
-                                viewDetailsModalBody.innerHTML = htmlContent;
-                            }
-
-                            if (editFromViewBtn) {
-                                editFromViewBtn.dataset.id = rowId;
-                            }
-
-                            viewDetailsModal.show();
-                        })
-                        .catch(error => {
-                            console.error('Error fetching record details:', error); 
-                            alert('Could not fetch record details. Check console for more info.'); 
-                        });
+                let queryParams = new URLSearchParams(window.location.search);
+                // Clear existing filter params
+                for (let key of Array.from(queryParams.keys())) {
+                    if (key.startsWith('filter_')) {
+                        queryParams.delete(key);
+                    }
                 }
-            });
-        }
 
-        // Handle click on Edit button within the View Details modal
-        if (editFromViewBtn) {
-            editFromViewBtn.addEventListener('click', function() {
-                const rowId = this.dataset.id;
-                if (rowId) {
-                    viewDetailsModal.hide();
-                    fetch(`/cutting/edit/${rowId}`)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`HTTP error! status: ${response.status}`);
-                            }
-                            return response.text();
-                        })
-                        .then(html => {
-                            const editModalContent = document.querySelector('#editModal .modal-content');
-                            if (editModalContent) {
-                                editModalContent.innerHTML = html;
-                                const editModal = new bootstrap.Modal(document.getElementById('editModal'));
-                                editModal.show();
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error fetching record details for edit:', error);
-                            alert('Could not load record data for editing.');
-                        });
+                filterConditions.forEach((filter, index) => {
+                    if (filter.field && filter.operator) {
+                        queryParams.append(`filter_field_${index}`, filter.field);
+                        queryParams.append(`filter_operator_${index}`, filter.operator);
+                        if (filter.operator !== 'is_set' && filter.operator !== 'not_set') {
+                            queryParams.append(`filter_value_${index}`, filter.value);
+                        }
+                    }
+                });
+
+                showLoading();
+                window.location.search = queryParams.toString();
+            });
+
+            // Clear all filters
+            document.getElementById('clearAdvancedFilter').addEventListener('click', function() {
+                let queryParams = new URLSearchParams(window.location.search);
+                for (let key of Array.from(queryParams.keys())) {
+                    if (key.startsWith('filter_')) {
+                        queryParams.delete(key);
+                    }
                 }
+                showLoading();
+                window.location.search = queryParams.toString();
             });
-        }
 
-        // Initial state update on page load
-        updateSelectionState();
+            // Clear all active filters button (outside modal)
+            const clearAllActiveFiltersBtn = document.getElementById('clearAllActiveFilters');
+            if (clearAllActiveFiltersBtn) {
+                clearAllActiveFiltersBtn.addEventListener('click', function() {
+                    let queryParams = new URLSearchParams(window.location.search);
+                    for (let key of Array.from(queryParams.keys())) {
+                        if (key.startsWith('filter_')) {
+                            queryParams.delete(key);
+                        }
+                    }
+                    showLoading();
+                    window.location.search = queryParams.toString();
+                });
+            }
 
-        // Initialize tooltips
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
-            new bootstrap.Tooltip(tooltipTriggerEl);
+            // Clear search filter button (outside modal)
+            const clearSearchFilterBtn = document.getElementById('clearSearchFilter');
+            if (clearSearchFilterBtn) {
+                clearSearchFilterBtn.addEventListener('click', function() {
+                    let queryParams = new URLSearchParams(window.location.search);
+                    queryParams.delete('search');
+                    showLoading();
+                    window.location.search = queryParams.toString();
+                });
+            }
+
+            // Update active filter count
+            function updateActiveFilterCount() {
+                const urlParams = new URLSearchParams(window.location.search);
+                let count = 0;
+                let i = 0;
+                while (urlParams.has(`filter_field_${i}`)) {
+                    count++;
+                    i++;
+                }
+                const activeFilterCountSpan = document.getElementById('activeFilterCount');
+                if (activeFilterCountSpan) {
+                    activeFilterCountSpan.textContent = count;
+                    activeFilterCountSpan.style.display = count > 0 ? 'inline-block' : 'none';
+                }
+            }
+
+            // Populate filters from URL when modal opens
+            document.getElementById('advancedFilterModal').addEventListener('shown.bs.modal', function () {
+                const urlParams = new URLSearchParams(window.location.search);
+                const existingFilters = [];
+                let i = 0;
+                while (urlParams.has(`filter_field_${i}`)) {
+                    existingFilters.push({
+                        field: urlParams.get(`filter_field_${i}`),
+                        operator: urlParams.get(`filter_operator_${i}`),
+                        value: urlParams.get(`filter_value_${i}`) || ''
+                    });
+                    i++;
+                }
+
+                const filterConditionsDiv = document.getElementById('filterConditions');
+                filterConditionsDiv.innerHTML = ''; // Clear existing conditions
+                filterConditionCount = 0; // Always reset count when opening modal to ensure consistent IDs
+
+                if (existingFilters.length > 0) {
+                    existingFilters.forEach(filter => {
+                        const newConditionDiv = addFilterCondition(); // Get the newly created element
+                        newConditionDiv.querySelector('.filter-field').value = filter.field;
+                        newConditionDiv.querySelector('.filter-operator').value = filter.operator;
+                        // Manually trigger change to update display of value input for is_set/not_set
+                        const event = new Event('change');
+                        newConditionDiv.querySelector('.filter-operator').dispatchEvent(event);
+
+                        if (filter.operator !== 'is_set' && filter.operator !== 'not_set') {
+                            newConditionDiv.querySelector('.filter-value').value = filter.value;
+                        } else {
+                            newConditionDiv.querySelector('.filter-value').style.display = 'none';
+                        }
+                    });
+                } else {
+                    addFilterCondition(); // Add one empty filter condition by default if no filters are present
+                }
+                updateActiveFilterCount(); // Ensure count is updated after modal population
+            });
+
+            // Initial update of active filter count on page load
+            updateActiveFilterCount();
+
         });
-    });
-</script>
+    </script>
 {% endblock %} 

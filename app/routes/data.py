@@ -79,7 +79,7 @@ def get_all_data(table_name: str, search_term: str = "", columns: list[str] = No
         print(f"[DEBUG] get_all_data - Error: {e}")
         return [] # Return empty list on error
 
-@bp.route("/production")
+@bp.route("/pending-order")
 def production_data():
     search = request.args.get("search", "").strip()
     try:
@@ -97,7 +97,7 @@ def production_data():
     print(f"Production page - Headers: {data.get('headers')}")  # Debug log
     return render_template("shipment.html", **data, column_view=column_view)
 
-@bp.route("/cutting")
+@bp.route("/cutting-phase")
 def cutting():
     search = request.args.get("search", "").strip()
     try:
@@ -115,12 +115,12 @@ def cutting():
     print(f"Cutting page - Headers: {data.get('headers')}")  # Debug log
     return render_template("cutting.html", **data, column_view=column_view, today_date=date.today().isoformat())
 
-@bp.route("/cutting/details/test", methods=['GET'])
+@bp.route("/cutting-phase/details/test", methods=['GET'])
 def cutting_details_test():
     logger.info("Temporary cutting details test route hit.")
     return jsonify({"message": "Test route successful!"}), 200
 
-@bp.route("/cutting/details/<string:record_id>", methods=['GET'])
+@bp.route("/cutting-phase/details/<string:record_id>", methods=['GET'])
 def get_cutting_details(record_id):
     """
     Fetches full details for a single cutting record using Supabase.
@@ -140,7 +140,7 @@ def get_cutting_details(record_id):
         logger.error(f"Error fetching cutting record details for ID {record_id} from Supabase: {str(e)}", exc_info=True)
         return jsonify({'message': 'Internal Server Error'}), 500
 
-@bp.route("/cutting/add", methods=['POST'])
+@bp.route("/cutting-phase/add", methods=['POST'])
 def add_cutting():
     try:
         data = request.form
@@ -195,7 +195,7 @@ def add_cutting():
         flash(f'Error adding cutting data: {str(e)}', 'error')
         return redirect(url_for('data.cutting'))
 
-@bp.route("/cutting/edit/<string:id>", methods=['GET', 'POST'])
+@bp.route("/cutting-phase/edit/<string:id>", methods=['GET', 'POST'])
 def edit_cutting(id):
     if request.method == 'POST':
         try:
@@ -258,7 +258,7 @@ def edit_cutting(id):
 
         return render_template('components/edit_cutting_modal_content.html', record=record)
 
-@bp.route("/cutting/bulk_delete", methods=['POST'])
+@bp.route("/cutting-phase/bulk_delete", methods=['POST'])
 def bulk_delete_cutting():
     selected_ids = request.json.get('ids', [])
     if not selected_ids:
@@ -275,7 +275,7 @@ def bulk_delete_cutting():
         logger.error(f"Error during bulk delete from Supabase: {str(e)}", exc_info=True)
         return jsonify({'message': f'Error deleting records: {str(e)}'}), 500
 
-@bp.route("/tab-production")
+@bp.route("/production-phase")
 def tab_production():
     search = request.args.get("search", "").strip()
     try:
@@ -293,7 +293,7 @@ def tab_production():
     print(f"Tab Production page - Headers: {data.get('headers')}")  # Debug log
     return render_template("tab_production.html", **data, column_view=column_view)
 
-@bp.route("/cutting/export", methods=['GET'])
+@bp.route("/cutting-phase/export", methods=['GET'])
 def export_cutting():
     search = request.args.get("search", "")
     
@@ -317,11 +317,11 @@ def export_cutting():
         cw.writerow([row[key] for key in headers])
 
     output = make_response(si.getvalue())
-    output.headers["Content-Disposition"] = "attachment; filename=cutting_data.csv"
+    output.headers["Content-Disposition"] = "attachment; filename=Daily Cutting.csv"
     output.headers["Content-type"] = "text/csv"
     return output
 
-@bp.route("/production/export", methods=['GET'])
+@bp.route("/pending-order/export", methods=['GET'])
 def export_production():
     search = request.args.get("search", "")
     data_rows = get_all_data(TABLES["production"], search_term=search, columns=None) # get_all_data now uses Supabase
@@ -342,7 +342,7 @@ def export_production():
     output.headers["Content-type"] = "text/csv"
     return output
 
-@bp.route("/tab-production/export", methods=['GET'])
+@bp.route("/production-phase/export", methods=['GET'])
 def export_tab_production():
     search = request.args.get("search", "")
     data_rows = get_all_data(TABLES["tab_production"], search_term=search, columns=None) # get_all_data now uses Supabase
@@ -359,6 +359,6 @@ def export_tab_production():
         cw.writerow([row[key] for key in headers])
     
     output = make_response(si.getvalue())
-    output.headers["Content-Disposition"] = "attachment; filename=tab_production_data.csv"
+    output.headers["Content-Disposition"] = "attachment; filename=Production Data.csv"
     output.headers["Content-type"] = "text/csv"
     return output 

@@ -517,12 +517,12 @@ body.sb-sidenav-toggled #page-content-wrapper {
 
 /* Button Styles (General) */
 .btn {
-    padding: 0.5rem 1rem; /* Consistent padding for all buttons */
+    padding: 0.5rem 1rem;
     font-weight: 500;
-    font-size: 0.9rem; /* Slightly smaller font size */
-    border-radius: 6px; /* Reduced border-radius */
+    font-size: 0.9rem;
+    border-radius: 6px;
     transition: all 0.2s ease;
-    box-shadow: none; /* Remove general button shadow */
+    box-shadow: none;
 }
 
 .btn:hover {
@@ -542,6 +542,7 @@ body.sb-sidenav-toggled #page-content-wrapper {
 }
 
 .btn-secondary {
+    text-align: right;
     background-color: #ffffff; /* White background for secondary buttons */
     border: 1px solid #ced4da; /* Light border */
     color: #495057; /* Darker grey text color */

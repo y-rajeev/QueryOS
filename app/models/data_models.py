@@ -39,22 +39,46 @@ def get_paginated_data(table_name, search="", page=1, limit=10, columns: list[st
             if search_conditions:
                 query = query.or_(",".join(search_conditions))
 
-        # Handle individual column filters
-        for key, value in request.args.items():
-            if key.startswith('filter_') and value.strip():
-                column = key.replace('filter_', '')
-                # Ensure the filtered column is part of the requested columns if columns are specified
-                if columns and column not in columns:
-                    continue # Skip filtering if column is not requested
+        # Define numeric fields for appropriate comparison types
+        numeric_fields = ['pcs_pack', 'sets', 'produced_qty', 'rejection']
 
-                if column in ['po_qty', 'dispatched_qty', 'pending_qty']:
-                    try:
-                        num_value = float(value.strip())
-                        query = query.eq(column, num_value)
-                    except ValueError:
-                        query = query.ilike(column, f"%{value.strip()}%")
+        # Handle filters (field, operator, value)
+        filter_index = 0
+        while True:
+            field = request.args.get(f'filter_field_{filter_index}')
+            operator = request.args.get(f'filter_operator_{filter_index}')
+            value = request.args.get(f'filter_value_{filter_index}')
+
+            if not field or not operator:
+                break # No more filter conditions
+
+            print(f"[DEBUG] Processing filter: field={field}, operator={operator}, value={value}")
+
+            # Apply Supabase filter based on operator
+            if operator == 'equal':
+                if field in numeric_fields:
+                    query = query.eq(field, float(value)) if value else query # Handle potential empty value for numeric fields
                 else:
-                    query = query.ilike(column, f"%{value.strip()}%")
+                    query = query.ilike(field, value) # Use ilike for case-insensitive string equality
+            elif operator == 'not_equal':
+                if field in numeric_fields:
+                    query = query.neq(field, float(value)) if value else query
+                else:
+                    query = query.not_ilike(field, value)
+            elif operator == 'like':
+                query = query.ilike(field, f'%{value}%')
+            elif operator == 'not_like':
+                query = query.not_ilike(field, f'%{value}%')
+            elif operator == 'is_set':
+                query = query.not_eq(field, None)
+            elif operator == 'not_set':
+                query = query.eq(field, None)
+            elif operator == 'gt':
+                query = query.gt(field, float(value))
+            elif operator == 'lt':
+                query = query.lt(field, float(value))
+            
+            filter_index += 1
 
         data_response = query.execute()
         print(f"[DEBUG] Supabase raw data_response.data (before pagination): {data_response.data}") # DEBUG
