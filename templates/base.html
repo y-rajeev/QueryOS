@@ -10,6 +10,21 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    <script>
+        // Apply sidebar state immediately to prevent flicker on page load
+        (function() {
+            try {
+                const isSidebarToggled = localStorage.getItem('sb|sidebar-toggle') === 'true';
+                if (isSidebarToggled) {
+                    document.body.classList.add('sb-sidenav-toggled');
+                } else {
+                    document.body.classList.remove('sb-sidenav-toggled');
+                }
+            } catch (e) {
+                console.error("Error applying sidebar state from localStorage on immediate load:", e);
+            }
+        })();
+    </script>
     {# Fixed Top Navbar #}
     <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom fixed-top">
         <div class="container-fluid">
@@ -86,18 +101,15 @@
         window.addEventListener('DOMContentLoaded', event => {
             // Toggle the side navigation
             const sidebarToggle = document.body.querySelector('#sidebarToggleTop'); // Use the new toggle button ID
+            const body = document.body;
+
             if (sidebarToggle) {
-                // Comment out or remove the media query check if you want the sidebar to be hidden by default on larger screens
-                // if (localStorage.getItem('sb|sidebar-toggle') === 'true') {
-                //     document.body.classList.toggle('sb-sidenav-toggled');
-                // }
                 sidebarToggle.addEventListener('click', event => {
                     event.preventDefault();
-                    document.body.classList.toggle('sb-sidenav-toggled');
-                    // localStorage.setItem('sb|sidebar-toggle', document.body.classList.contains('sb-sidenav-toggled'));
+                    body.classList.toggle('sb-sidenav-toggled');
+                    localStorage.setItem('sb|sidebar-toggle', body.classList.contains('sb-sidenav-toggled'));
                 });
             }
-
         });
     </script>
     {% block scripts %}{% endblock %}
