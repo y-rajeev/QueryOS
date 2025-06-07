@@ -156,13 +156,10 @@
                     <div class="modal-body">
                         <div class="row g-3">
                             {# Input fields for adding new record #}
-                            <div class="col-md-6">
-                                <label class="form-label">ID</label>
-                                <input type="text" class="form-control form-control-sm" name="id" required>
-                            </div>
+                            <input type="hidden" name="id"> {# ID will be auto-generated #}
                             <div class="col-md-6">
                                 <label class="form-label">Date</label>
-                                <input type="date" class="form-control form-control-sm" name="date" required>
+                                <input type="date" class="form-control form-control-sm" name="date" value="{{ today_date }}" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">PO No</label>
@@ -192,21 +189,14 @@
                                 <label class="form-label">PCS Pack</label>
                                 <input type="number" class="form-control form-control-sm" name="pcs_pack" required>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Sets</label>
-                                <input type="number" class="form-control form-control-sm" name="sets" required>
-                            </div>
+                            {# Sets and Unpair PCS will be calculated in backend #}
                             <div class="col-md-6">
                                 <label class="form-label">Produced Quantity</label>
                                 <input type="number" class="form-control form-control-sm" name="produced_qty" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Unpair PCS</label>
-                                <input type="number" class="form-control form-control-sm" name="unpair_pcs" required>
-                            </div>
-                            <div class="col-md-6">
                                 <label class="form-label">Rejection</label>
-                                <input type="number" class="form-control form-control-sm" name="rejection" required>
+                                <input type="number" class="form-control form-control-sm" name="rejection">
                             </div>
                         </div>
                     </div>
@@ -291,19 +281,19 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Confirm Delete</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title" id="deleteConfirmModalLabel">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    Are you sure you want to delete the selected records?
+                    Are you sure you want to delete the selected record(s)? This action cannot be undone.
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger btn-sm" id="confirmBulkDeleteBtn">Delete</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmBulkDeleteBtn">Delete</button>
                 </div>
             </div>
         </div>
@@ -313,8 +303,71 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // List View Dropdown Handler
+        // Get all necessary DOM elements and initialize modals
         const listViewDropdown = document.getElementById('listViewDropdownCutting');
+        const selectAllCheckbox = document.getElementById('selectAll');
+        const table = document.querySelector('.table'); // Ensure table is selected
+        const rowSelectCheckboxes = document.querySelectorAll('.row-select');
+        const deleteSelectedBtnDropdown = document.getElementById('deleteSelectedBtnDropdown');
+        const confirmBulkDeleteBtn = document.getElementById('confirmBulkDeleteBtn'); 
+        
+        const viewDetailsModal = new bootstrap.Modal(document.getElementById('viewDetailsModal'));
+        const viewDetailsModalBody = document.querySelector('#viewDetailsModal .modal-body');
+        const editFromViewBtn = document.getElementById('editFromViewBtn');
+        const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+        const editForm = document.getElementById('editForm');
+        
+        // Initialize delete confirmation modal only if its element exists
+        let deleteConfirmModal;
+        const deleteConfirmModalElement = document.getElementById('deleteConfirmModal');
+        if (deleteConfirmModalElement) {
+            deleteConfirmModal = new bootstrap.Modal(deleteConfirmModalElement);
+        } else {
+            console.error("Delete confirmation modal element not found!");
+        }
+
+        let selectedRows = new Set(); // Stores IDs of selected rows
+
+        // Function to update the state of the delete button and select-all checkbox
+        function updateSelectionState() {
+            selectedRows.clear();
+            rowSelectCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    selectedRows.add(checkbox.closest('tr').dataset.id);
+                }
+            });
+            
+            if (deleteSelectedBtnDropdown) {
+                deleteSelectedBtnDropdown.disabled = selectedRows.size === 0;
+            }
+
+            const totalRows = rowSelectCheckboxes.length;
+            const selectedCount = selectedRows.size;
+
+            if (totalRows === 0) {
+                if (selectAllCheckbox) { // Check if selectAllCheckbox exists
+                    selectAllCheckbox.checked = false;
+                    selectAllCheckbox.indeterminate = false;
+                }
+            } else if (selectedCount === 0) {
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = false;
+                    selectAllCheckbox.indeterminate = false;
+                }
+            } else if (selectedCount === totalRows) {
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = true;
+                    selectAllCheckbox.indeterminate = false;
+                }
+            } else {
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = false;
+                    selectAllCheckbox.indeterminate = true;
+                }
+            }
+        }
+
+        // List View Dropdown Handler
         if (listViewDropdown) {
             listViewDropdown.querySelectorAll('.dropdown-item').forEach(item => {
                 item.addEventListener('click', function(e) {
@@ -343,207 +396,148 @@
             });
         }
 
-        const deleteSelectedBtnDropdown = document.getElementById('deleteSelectedBtnDropdown');
-        const selectAllCheckbox = document.getElementById('selectAll');
-        const table = document.querySelector('.table');
-
-        // Store selected row IDs
-        let selectedRows = new Set();
-
-        // Function to update delete button state and select-all checkbox
-        function updateSelectionState() {
-            const rowSelectCheckboxes = table.querySelectorAll('.row-select');
-            selectedRows.clear();
-            rowSelectCheckboxes.forEach(checkbox => {
-                if (checkbox.checked) {
-                    selectedRows.add(checkbox.closest('tr').dataset.id);
+        // Handle individual row checkbox clicks using event delegation on the table
+        if (table) { // Ensure table element exists
+            table.addEventListener('change', function(event) {
+                if (event.target.classList.contains('row-select')) {
+                    updateSelectionState();
                 }
             });
-
-            if (deleteSelectedBtnDropdown) {
-                deleteSelectedBtnDropdown.disabled = selectedRows.size === 0;
-            }
-
-            const totalRows = rowSelectCheckboxes.length;
-            const selectedCount = selectedRows.size;
-
-            if (totalRows === 0) {
-                selectAllCheckbox.checked = false;
-                selectAllCheckbox.indeterminate = false;
-            } else if (selectedCount === 0) {
-                selectAllCheckbox.checked = false;
-                selectAllCheckbox.indeterminate = false;
-            } else if (selectedCount === totalRows) {
-                selectAllCheckbox.checked = true;
-                selectAllCheckbox.indeterminate = false;
-            } else {
-                selectAllCheckbox.checked = false;
-                selectAllCheckbox.indeterminate = true;
-            }
         }
-
-        // Handle individual row checkbox clicks
-        table.addEventListener('change', function(event) {
-            if (event.target.classList.contains('row-select')) {
-                updateSelectionState();
-            }
-        });
 
         // Handle select-all checkbox click
-        selectAllCheckbox.addEventListener('change', function(event) {
-            const isChecked = event.target.checked;
-            table.querySelectorAll('.row-select').forEach(checkbox => {
-                checkbox.checked = isChecked;
+        if (selectAllCheckbox) { // Ensure selectAllCheckbox exists
+            selectAllCheckbox.addEventListener('change', function(event) {
+                const isChecked = event.target.checked;
+                rowSelectCheckboxes.forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                });
+                updateSelectionState();
             });
-            updateSelectionState();
-        });
+        }
 
-        // Handle double-click on table rows using event delegation
-        table.addEventListener('dblclick', function (event) {
-            const row = event.target.closest('tr');
-            // Ensure the double-click was not on the checkbox itself
-            if (row && row.dataset.id && !event.target.classList.contains('row-select')) {
-                const rowId = row.dataset.id;
-                console.log('Double-clicked row with ID:', rowId); // Log the extracted ID
-                const fetchUrl = `/cutting/details/${rowId}`;
-                console.log('Fetching details from URL:', fetchUrl); // Log the fetch URL
-                // Fetch full details for the record
-                fetch(fetchUrl)
-                    .then(response => {
-                        console.log('Received response with status:', response.status); // Log the response status
-                        if (!response.ok) {
-                            // Log the error response status and potentially the text
-                            console.error('HTTP error! Status:', response.status);
-                            // Attempt to read the response body for more info, but handle if it's not text/json
-                            response.text().then(text => console.error('Response body:', text)).catch(() => console.error('Could not read response body.'));
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log('Successfully fetched data:', data); // Log the successfully fetched data
-                        // Populate the view details modal body
-                        let htmlContent = '<div class="row g-3">';
-                        for (const key in data) {
-                            // Exclude the ID from display in the view modal if you wish
-                             if (key !== 'id') {
-                                 // Capitalize the first letter and replace underscores for display
-                                 const displayKey = key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
-                                 htmlContent += `<div class="col-md-6"><p><strong>${displayKey}:</strong> ${data[key]}</p></div>`;
-                             }
-                        }
-                        htmlContent += '</div>';
-                        viewDetailsModalBody.innerHTML = htmlContent;
-
-                        // Store the ID in the edit button for later use
-                        editFromViewBtn.dataset.id = rowId;
-
-                        // Show the view modal
-                        viewDetailsModal.show();
-                    })
-                    .catch(error => {
-                        console.error('Error fetching record details:', error); // This is the general error log
-                        // Optionally show an error message to the user
-                        alert('Could not fetch record details. Check console for more info.'); // Update alert to guide user to console
-                    });
-            }
-        });
-
-        // Handle click on Edit button within the View Details modal
-        editFromViewBtn.addEventListener('click', function() {
-             const rowId = this.dataset.id;
-             if (rowId) {
-                 // Hide view modal
-                 viewDetailsModal.hide();
-                 // Fetch data again to populate the edit form - good practice to get fresh data
-                 fetch(`/cutting/details/${rowId}`)
-                    .then(response => {
-                         if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                         }
-                         return response.json();
-                    })
-                    .then(data => {
-                         // Populate the edit form fields
-                         editForm.action = `/cutting/edit/${rowId}`;
-                         for (const key in data) {
-                             if (editForm.elements[key]) {
-                                 // Handle date input format
-                                 if (editForm.elements[key].type === 'date' && data[key]) {
-                                     // Assuming date is in YYYY-MM-DD format from backend
-                                     editForm.elements[key].value = data[key];
-                                 } else {
-                                     editForm.elements[key].value = data[key];
-                                 }
-                             }
-                         }
-                        editModal.show();
-                    })
-                    .catch(error => {
-                         console.error('Error fetching record details for edit:', error);
-                         // Optionally show an error message to the user
-                         alert('Could not load record data for editing.');
-                    });
-             }
-        });
-
-        // Handle click on Delete Selected button (opens confirmation modal) - now from dropdown
-        if (deleteSelectedBtnDropdown) {
-            deleteSelectedBtnDropdown.addEventListener('click', function() {
+        // Delete Selected Button (in dropdown) Handler
+        if (deleteSelectedBtnDropdown && deleteConfirmModal) { // Ensure modal is initialized before attaching listener
+            deleteSelectedBtnDropdown.addEventListener('click', function(e) {
+                e.preventDefault();
                 if (selectedRows.size > 0) {
-                    deleteConfirmModal.show();
+                    deleteConfirmModal.show(); // Show the confirmation modal
+                } else {
+                    alert('Please select at least one record to delete.');
                 }
             });
         }
 
-        // Handle confirmation of bulk delete
-        confirmBulkDeleteBtn.addEventListener('click', function() {
-            showLoading(); // Show loader on bulk delete
-            const idsToDelete = Array.from(selectedRows);
-            // Close confirmation modal immediately
-            deleteConfirmModal.hide();
+        // Confirm Bulk Delete Button Handler (inside the modal)
+        if (confirmBulkDeleteBtn && deleteConfirmModal) { // Ensure modal is initialized before attaching listener
+            confirmBulkDeleteBtn.addEventListener('click', function() {
+                deleteConfirmModal.hide(); // Hide the modal immediately
+                showLoading(); // Show loading indicator
 
-            fetch('/cutting/bulk_delete', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // Add CSRF token here if you have Flask-WTF configured
-                    // 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content') # Example
-                },
-                body: JSON.stringify({ ids: idsToDelete })
-            })
-            .then(response => {
-                // Check for a JSON response explicitly if your backend sends JSON on success/error
-                if (response.headers.get('content-type') && response.headers.get('content-type').includes('application/json')) {
-                     return response.json().then(data => ({ status: response.status, body: data }));
-                } else {
-                     // If not JSON, assume text or no body on success
-                     return response.text().then(text => ({ status: response.status, body: text }));
-                }
-            })
-            .then(({ status, body }) => {
-                if (status >= 200 && status < 300) {
-                    console.log('Delete successful:', body);
-                    // Handle success (e.g., show flash message, refresh page)
-                    // Clear selection and update button state
-                    selectedRows.clear();
-                    updateSelectionState(); // Update button and select-all based on remaining rows
-                    // Consider refreshing the page or removing rows dynamically
-                    window.location.reload(); // Simple refresh for now
-                } else {
-                    console.error('Error during bulk delete:', body);
-                    // Handle error (e.g., show error message)
-                     alert(`Error deleting records: ${body.message || body}`); // Show message from backend or raw body
-                }
-            })
-            .catch(error => {
-                console.error('Fetch error during bulk delete:', error);
-                // Handle network errors etc.
-                alert('An error occurred during the delete request.');
+                fetch("{{ url_for('data.bulk_delete_cutting') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ ids: Array.from(selectedRows) })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        // Attempt to parse JSON error message from backend
+                        return response.json().then(err => { throw new Error(err.message || 'Unknown error'); });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Delete successful:', data.message);
+                    window.location.reload(); // Refresh the page to show updated data
+                })
+                .catch(error => {
+                    console.error('Error during bulk delete:', error);
+                    hideLoading(); // Hide loading indicator on error
+                    alert('Failed to delete records: ' + error.message); // Show error to user
+                });
             });
-        });
+        }
 
-         // Initial state update
+        // Double-click event listener for table rows (for View Details Modal)
+        const tableBody = document.querySelector('.table tbody');
+        if (tableBody) {
+            tableBody.addEventListener('dblclick', function (event) {
+                const row = event.target.closest('tr');
+                if (row && row.dataset.id && !event.target.classList.contains('row-select')) {
+                    const rowId = row.dataset.id;
+                    console.log('Double-clicked row with ID:', rowId); 
+                    const fetchUrl = `/cutting/details/${rowId}`;
+                    console.log('Fetching details from URL:', fetchUrl); 
+                    fetch(fetchUrl)
+                        .then(response => {
+                            console.log('Received response with status:', response.status); 
+                            if (!response.ok) {
+                                console.error('HTTP error! Status:', response.status);
+                                response.text().then(text => console.error('Response body:', text)).catch(() => console.error('Could not read response body.'));
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('Successfully fetched data:', data); 
+                            let htmlContent = '<div class="row g-3">';
+                            for (const key in data) {
+                                 if (key !== 'id') {
+                                     const displayKey = key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
+                                     htmlContent += `<div class="col-md-6"><p><strong>${displayKey}:</strong> ${data[key]}</p></div>`;
+                                 }
+                            }
+                            htmlContent += '</div>';
+                            if (viewDetailsModalBody) {
+                                viewDetailsModalBody.innerHTML = htmlContent;
+                            }
+
+                            if (editFromViewBtn) {
+                                editFromViewBtn.dataset.id = rowId;
+                            }
+
+                            viewDetailsModal.show();
+                        })
+                        .catch(error => {
+                            console.error('Error fetching record details:', error); 
+                            alert('Could not fetch record details. Check console for more info.'); 
+                        });
+                }
+            });
+        }
+
+        // Handle click on Edit button within the View Details modal
+        if (editFromViewBtn) {
+            editFromViewBtn.addEventListener('click', function() {
+                const rowId = this.dataset.id;
+                if (rowId) {
+                    viewDetailsModal.hide();
+                    fetch(`/cutting/edit/${rowId}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.text();
+                        })
+                        .then(html => {
+                            const editModalContent = document.querySelector('#editModal .modal-content');
+                            if (editModalContent) {
+                                editModalContent.innerHTML = html;
+                                const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+                                editModal.show();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching record details for edit:', error);
+                            alert('Could not load record data for editing.');
+                        });
+                }
+            });
+        }
+
+        // Initial state update on page load
         updateSelectionState();
 
         // Initialize tooltips

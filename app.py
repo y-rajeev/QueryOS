@@ -1,13 +1,16 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from database import init_db, close_db_connection
 import os
+from dotenv import load_dotenv # Import load_dotenv
 from app.routes import data
 import logging
 from logging.handlers import RotatingFileHandler
 from typing import Optional
+
+# Load environment variables from .env file
+load_dotenv()
 
 def create_app(test_config: Optional[dict] = None) -> Flask:
     """
@@ -26,15 +29,25 @@ def create_app(test_config: Optional[dict] = None) -> Flask:
         # Load the instance config, if it exists, when not testing
         app.config.from_mapping(
             SECRET_KEY=os.getenv('SECRET_KEY', 'dev'),
-            DB_HOST=os.getenv('DB_HOST', 'localhost'),
-            DB_NAME=os.getenv('DB_NAME', 'your_database'),
-            DB_USER=os.getenv('DB_USER', 'your_username'),
-            DB_PASSWORD=os.getenv('DB_PASSWORD', 'your_password'),
+            DB_HOST=os.getenv('DB_HOST'),
+            DB_NAME=os.getenv('DB_NAME'),
+            DB_USER=os.getenv('DB_USER'),
+            DB_PASSWORD=os.getenv('DB_PASSWORD'),
+            DB_PORT=os.getenv('DB_PORT', '5432'),
             MAX_CONTENT_LENGTH=16 * 1024 * 1024,  # 16MB max file size
             SESSION_COOKIE_SECURE=True,
             SESSION_COOKIE_HTTPONLY=True,
             SESSION_COOKIE_SAMESITE='Lax',
         )
+
+        # Explicitly check for required database environment variables
+        # This check is now less critical as direct DB connection is being removed, 
+        # but keeping it for now if other modules still rely on it temporarily.
+        # required_db_vars = ['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASSWORD']
+        # for var in required_db_vars:
+        #     if not app.config.get(var):
+        #         raise RuntimeError(f"Missing required environment variable: {var}. Please ensure your .env file is correctly configured.")
+
     else:
         # Load the test config if passed in
         app.config.from_mapping(test_config)
@@ -66,9 +79,7 @@ def create_app(test_config: Optional[dict] = None) -> Flask:
     # Register blueprints
     app.register_blueprint(data.bp)
 
-    # Initialize database
-    with app.app_context():
-        init_db(app)
+    # No more direct database teardown needed here as `database.py` is removed.
 
     # Register error handlers
     @app.errorhandler(404)
@@ -78,11 +89,6 @@ def create_app(test_config: Optional[dict] = None) -> Flask:
     @app.errorhandler(500)
     def internal_error(error):
         return render_template('errors/500.html'), 500
-
-    @app.teardown_appcontext
-    def cleanup(exception=None):
-        """Clean up resources when the application context ends."""
-        pass  # Add cleanup code if needed
 
     return app
 
