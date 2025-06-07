@@ -143,7 +143,7 @@ def production_data():
     
     data = get_paginated_data(TABLES["production"], search, page, limit, columns=columns_to_fetch)
     print(f"Production page - Headers: {data.get('headers')}")  # Debug log
-    return render_template("production_data.html", **data, column_view=column_view)
+    return render_template("shipment.html", **data, column_view=column_view)
 
 @bp.route("/cutting")
 def cutting():

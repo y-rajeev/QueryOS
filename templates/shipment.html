@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Shipment Data{% endblock %}
+
+{% block content %}
+    <!-- Page Header Section -->
+    <div class="mb-3"> {# Overall spacing below header #}
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex align-items-center mb-2">
+                <h2 class="me-3">Dispatch Data</h2>
+            </div>
+            <div class="d-flex page-header-actions">
+                <div class="dropdown">
+                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="listViewDropdownDispatch" data-bs-toggle="dropdown" aria-expanded="false" title="List View">
+                        <i class="bi bi-list me-2"></i> List View
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="listViewDropdownDispatch">
+                        <li><a class="dropdown-item" href="#" data-column-view="limited">Limited Columns</a></li>
+                        <li><a class="dropdown-item" href="#" data-column-view="all">All Columns</a></li>
+                    </ul>
+                </div>
+                <button class="btn btn-secondary btn-sm" title="Refresh Data" onclick="window.location.reload(); showLoading();">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <form method="GET" class="d-flex">
+                <input type="text" name="search" class="form-control me-2" placeholder="Search..." value="{{ search }}">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Data Table Section -->
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    {% for header in headers %}
+                    <th>{{ header }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    {% for header in headers %}
+                    <td>{{ row[header] }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination Section -->
+    {% if total_pages > 1 %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if current_page > 1 %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('data.production_data', page=current_page-1, search=search, column_view=column_view) }}">Previous</a>
+            </li>
+            {% endif %}
+            
+            {% for page in range(1, total_pages + 1) %}
+            <li class="page-item {% if page == current_page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('data.production_data', page=page, search=search, column_view=column_view) }}">{{ page }}</a>
+            </li>
+            {% endfor %}
+            
+            {% if current_page < total_pages %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('data.production_data', page=current_page+1, search=search, column_view=column_view) }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteSelectedBtnDispatch = document.getElementById('deleteSelectedBtnDispatch');
+        const confirmBulkDeleteBtnDispatch = document.getElementById('confirmBulkDeleteBtnDispatch'); // Assuming you have a confirmation modal for this page too
+        const table = document.querySelector('.table'); // Assuming table is present on this page
+
+        // Event listeners for column view options
+        const listViewDropdownDispatch = document.getElementById('listViewDropdownDispatch');
+        if (listViewDropdownDispatch) {
+            listViewDropdownDispatch.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const columnView = this.dataset.columnView;
+                    const currentUrl = new URL(window.location.href);
+                    currentUrl.searchParams.set('column_view', columnView);
+                    window.location.href = currentUrl.toString();
+                });
+            });
+        }
+
+        let selectedRowsDispatch = new Set();
+
+        // Placeholder function to update button state (adapt as needed)
+        function updateSelectionStateDispatch() {
+            // Example: If you have checkboxes with class 'row-select-dispatch'
+            // const rowSelectCheckboxes = document.querySelectorAll('.row-select-dispatch');
+            // selectedRowsDispatch.clear();
+            // rowSelectCheckboxes.forEach(checkbox => {
+            //     if (checkbox.checked) {
+            //         selectedRowsDispatch.add(checkbox.closest('tr').dataset.id);
+            //     }
+            // });
+
+            if (deleteSelectedBtnDispatch) {
+                deleteSelectedBtnDispatch.disabled = selectedRowsDispatch.size === 0;
+            }
+        }
+
+        // Initial state update (call this if you have checkboxes on page load)
+        updateSelectionStateDispatch();
+    });
+</script>
+{% endblock %} 
