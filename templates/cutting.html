@@ -23,7 +23,59 @@
 {% endblock %}
 
 {% block content %}
-    <h2 class="text-start text-primary mt-0 mb-0">Cutting Data</h2>
+    <!-- Page Header Section (Matching Image 2 style) -->
+    <div class="mb-3"> {# Overall spacing below header #}
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex align-items-center mb-2">
+                <h2 class="me-3">Cutting Data</h2>
+                <span class="badge bg-info text-dark" style="font-size: 1em;">{{ 'List View' if column_view == 'limited' else 'All Columns' }}</span>
+                <span class="ms-2" data-bs-toggle="tooltip" title="Use the List View to see only the most important columns. Use All Columns to see everything.">
+                    <i class="bi bi-info-circle"></i>
+                </span>
+            </div>
+            <div class="d-flex page-header-actions">
+                <div class="dropdown">
+                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="listViewDropdownCutting" data-bs-toggle="dropdown" aria-expanded="false" title="List View">
+                        <i class="bi bi-list me-2"></i> List View
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="listViewDropdownCutting">
+                        <li><a class="dropdown-item" href="#" data-column-view="limited">List View</a></li>
+                        <li><a class="dropdown-item" href="#" data-column-view="all">All Columns</a></li>
+                    </ul>
+                </div>
+                <button class="btn btn-secondary btn-sm" title="Refresh Data" onclick="window.location.reload();">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" title="More Actions">
+                        <i class="bi bi-three-dots"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
+                        <li><a class="dropdown-item" href="{{ url_for('data.export_cutting', search=search) }}"><i class="bi bi-download me-2"></i> Export Data</a></li>
+                        <li><button class="dropdown-item" id="deleteSelectedBtnDropdown"><i class="bi bi-trash me-2"></i> Delete Selected Record</button></li>
+                    </ul>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addModal">
+                    <i class="bi bi-plus-lg"></i> Add New
+                </button>
+            </div>
+        </div>
+
+        <!-- Search Input Section -->
+        <div class="row">
+            <div class="col-12 col-md-6">
+                <form method="get" class="d-flex">
+                    <input type="text" class="form-control form-control-sm me-2" name="search" placeholder="Search cutting data..." value="{{ search }}">
+                    <button type="submit" class="btn btn-primary btn-sm">Search</button>
+                </form>
+            </div>
+            {# Placeholder for additional filters/buttons on the right, if needed later (like "Image 2" has) #}
+            {# <div class="col-12 col-md-6 d-flex justify-content-end"> #}
+            {#    <button class="btn btn-outline-secondary btn-sm ms-2">Filter</button> #}
+            {#    <button class="btn btn-outline-secondary btn-sm ms-2">Last Updated On</button> #}
+            {# </div> #}
+        </div>
+    </div>
 
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -36,27 +88,6 @@
             {% endfor %}
         {% endif %}
     {% endwith %}
-
-    <!-- Search, Bulk Actions, and Add Button -->
-    <div class="row mt-0 mb-0 align-items-center">
-        <div class="col-md-6">
-            <form method="get" class="d-flex">
-                <input type="text" class="form-control form-control-sm me-2" name="search" placeholder="Search cutting data..." value="{{ search }}">
-                <button type="submit" class="btn btn-primary btn-sm">Search</button>
-            </form>
-        </div>
-        <div class="col-md-6 text-end d-flex justify-content-end">
-             <a href="{{ url_for('data.export_cutting', search=search) }}" class="btn btn-secondary btn-sm">
-                 <i class="bi bi-download"></i> Export
-             </a>
-            <button id="deleteSelectedBtn" class="btn btn-danger btn-sm" disabled>
-                 <i class="bi bi-trash"></i> Delete
-            </button>
-            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addModal">
-                <i class="bi bi-plus-lg"></i> Add New
-            </button>
-        </div>
-    </div>
 
     <!-- Data Table -->
     <div class="table-responsive">
@@ -285,18 +316,40 @@
 
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const table = document.querySelector('.table tbody');
+    document.addEventListener('DOMContentLoaded', function() {
+        // List View Dropdown Handler
+        const listViewDropdown = document.getElementById('listViewDropdownCutting');
+        if (listViewDropdown) {
+            listViewDropdown.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const columnView = this.getAttribute('data-column-view');
+                    console.log('Selected column view:', columnView); // Debug log
+                    
+                    // Get current URL and parameters
+                    const currentUrl = new URL(window.location.href);
+                    const searchParams = new URLSearchParams(currentUrl.search);
+                    
+                    // Update or add column_view parameter
+                    searchParams.set('column_view', columnView);
+                    
+                    // Preserve other parameters
+                    const page = searchParams.get('page') || '1';
+                    const search = searchParams.get('search') || '';
+                    
+                    // Construct new URL
+                    const newUrl = `${currentUrl.pathname}?${searchParams.toString()}`;
+                    console.log('Redirecting to:', newUrl); // Debug log
+                    
+                    // Redirect to new URL
+                    window.location.href = newUrl;
+                });
+            });
+        }
+
+        const deleteSelectedBtnDropdown = document.getElementById('deleteSelectedBtnDropdown');
         const selectAllCheckbox = document.getElementById('selectAll');
-        // Use event delegation for checkboxes to include future rows if pagination loads more data
-        const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
-        const viewDetailsModal = new bootstrap.Modal(document.getElementById('viewDetailsModal'));
-        const editModal = new bootstrap.Modal(document.getElementById('editModal'));
-        const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-        const confirmBulkDeleteBtn = document.getElementById('confirmBulkDeleteBtn');
-        const viewDetailsModalBody = document.querySelector('#viewDetailsModal .modal-body');
-        const editForm = document.getElementById('editForm');
-        const editFromViewBtn = document.getElementById('editFromViewBtn');
+        const table = document.querySelector('.table');
 
         // Store selected row IDs
         let selectedRows = new Set();
@@ -304,14 +357,16 @@
         // Function to update delete button state and select-all checkbox
         function updateSelectionState() {
             const rowSelectCheckboxes = table.querySelectorAll('.row-select');
-            selectedRows.clear(); // Clear set to rebuild based on current checked checkboxes
+            selectedRows.clear();
             rowSelectCheckboxes.forEach(checkbox => {
-                 if (checkbox.checked) {
-                     selectedRows.add(checkbox.closest('tr').dataset.id);
-                 }
+                if (checkbox.checked) {
+                    selectedRows.add(checkbox.closest('tr').dataset.id);
+                }
             });
 
-            deleteSelectedBtn.disabled = selectedRows.size === 0;
+            if (deleteSelectedBtnDropdown) {
+                deleteSelectedBtnDropdown.disabled = selectedRows.size === 0;
+            }
 
             const totalRows = rowSelectCheckboxes.length;
             const selectedCount = selectedRows.size;
@@ -331,20 +386,20 @@
             }
         }
 
-        // Handle individual row checkbox clicks using event delegation
-        table.addEventListener('change', function (event) {
+        // Handle individual row checkbox clicks
+        table.addEventListener('change', function(event) {
             if (event.target.classList.contains('row-select')) {
-                 updateSelectionState();
+                updateSelectionState();
             }
         });
 
         // Handle select-all checkbox click
-        selectAllCheckbox.addEventListener('change', function (event) {
+        selectAllCheckbox.addEventListener('change', function(event) {
             const isChecked = event.target.checked;
             table.querySelectorAll('.row-select').forEach(checkbox => {
                 checkbox.checked = isChecked;
             });
-             updateSelectionState(); // Update state after changing all checkboxes
+            updateSelectionState();
         });
 
         // Handle double-click on table rows using event delegation
@@ -436,12 +491,14 @@
              }
         });
 
-        // Handle click on Delete Selected button (opens confirmation modal)
-        deleteSelectedBtn.addEventListener('click', function() {
-            if (selectedRows.size > 0) {
-                deleteConfirmModal.show();
-            }
-        });
+        // Handle click on Delete Selected button (opens confirmation modal) - now from dropdown
+        if (deleteSelectedBtnDropdown) {
+            deleteSelectedBtnDropdown.addEventListener('click', function() {
+                if (selectedRows.size > 0) {
+                    deleteConfirmModal.show();
+                }
+            });
+        }
 
         // Handle confirmation of bulk delete
         confirmBulkDeleteBtn.addEventListener('click', function() {
@@ -492,7 +549,11 @@
          // Initial state update
         updateSelectionState();
 
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+            new bootstrap.Tooltip(tooltipTriggerEl);
+        });
     });
-
 </script>
 {% endblock %} 

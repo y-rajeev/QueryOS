@@ -3,29 +3,66 @@
 {% block title %}Dispatch Data{% endblock %}
 
 {% block content %}
-    <h2 class="text-center text-primary mb-4">Dispatch Data</h2>
-
-    <!-- Search and Filters Form -->
-    <form method="get" class="mb-4">
-        <!-- Global Search -->
-        <div class="row g-3 mb-3">
-            <div class="col-md-10">
-                <input type="text" class="form-control" name="search" placeholder="Search across all columns..." value="{{ search }}">
+    <!-- Page Header Section -->
+    <div class="mb-3"> {# Overall spacing below header #}
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex align-items-center mb-2">
+                <h2 class="me-3">Production Data</h2>
+                <span class="badge bg-info text-dark" style="font-size: 1em;">{{ 'List View' if column_view == 'limited' else 'All Columns' }}</span>
+                <span class="ms-2" data-bs-toggle="tooltip" title="Use the List View to see only the most important columns. Use All Columns to see everything.">
+                    <i class="bi bi-info-circle"></i>
+                </span>
             </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">Search</button>
+            <div class="d-flex page-header-actions">
+                <div class="dropdown">
+                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="listViewDropdownDispatch" data-bs-toggle="dropdown" aria-expanded="false" title="List View">
+                        <i class="bi bi-list me-2"></i> List View
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="listViewDropdownDispatch">
+                        <li><a class="dropdown-item" href="#" data-column-view="limited">Limited Columns</a></li>
+                        <li><a class="dropdown-item" href="#" data-column-view="all">All Columns</a></li>
+                    </ul>
+                </div>
+                <button class="btn btn-secondary btn-sm" title="Refresh Data" onclick="window.location.reload();">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButtonDispatch" data-bs-toggle="dropdown" aria-expanded="false" title="More Actions">
+                        <i class="bi bi-three-dots"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButtonDispatch">
+                        <li><a class="dropdown-item" href="{{ url_for('data.export_production', search=search) }}"><i class="bi bi-download me-2"></i> Export Data</a></li>
+                        <li><button class="dropdown-item" id="deleteSelectedBtnDispatch"><i class="bi bi-trash me-2"></i> Delete Selected Record</button></li>
+                    </ul>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addModal">
+                    <i class="bi bi-plus-lg"></i> Add New
+                </button>
             </div>
         </div>
-    </form>
 
-    <!-- Export Button -->
-    <div class="row mb-3">
-        <div class="col text-end">
-             <a href="{{ url_for('data.export_production', search=search) }}" class="btn btn-secondary btn-sm">
-                 <i class="bi bi-download"></i> Export Data
-             </a>
+        <!-- Search Input Section -->
+        <div class="row">
+            <div class="col-12 col-md-6">
+                <form method="get" class="d-flex">
+                    <input type="text" class="form-control form-control-sm me-2" name="search" placeholder="Search across all columns..." value="{{ search }}">
+                    <button type="submit" class="btn btn-primary btn-sm">Search</button>
+                </form>
+            </div>
         </div>
     </div>
+
+    <!-- Flash Messages (add this if not present, or ensure it's below the new header) -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
     <!-- Data Table -->
     <div class="table-responsive">
@@ -50,6 +87,88 @@
     </div>
 
     {% include 'components/pagination.html' %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteSelectedBtnDispatch = document.getElementById('deleteSelectedBtnDispatch');
+        const confirmBulkDeleteBtnDispatch = document.getElementById('confirmBulkDeleteBtnDispatch'); // Assuming you have a confirmation modal for this page too
+        const table = document.querySelector('.table'); // Assuming table is present on this page
+
+        // Event listeners for column view options
+        const listViewDropdownDispatch = document.getElementById('listViewDropdownDispatch');
+        if (listViewDropdownDispatch) {
+            listViewDropdownDispatch.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const columnView = this.dataset.columnView;
+                    const currentUrl = new URL(window.location.href);
+                    currentUrl.searchParams.set('column_view', columnView);
+                    window.location.href = currentUrl.toString();
+                });
+            });
+        }
+
+        let selectedRowsDispatch = new Set();
+
+        // Placeholder function to update button state (adapt as needed)
+        function updateSelectionStateDispatch() {
+            // Example: If you have checkboxes with class 'row-select-dispatch'
+            // const rowSelectCheckboxes = document.querySelectorAll('.row-select-dispatch');
+            // selectedRowsDispatch.clear();
+            // rowSelectCheckboxes.forEach(checkbox => {
+            //     if (checkbox.checked) {
+            //         selectedRowsDispatch.add(checkbox.closest('tr').dataset.id);
+            //     }
+            // });
+
+            if (deleteSelectedBtnDispatch) {
+                deleteSelectedBtnDispatch.disabled = selectedRowsDispatch.size === 0;
+            }
+        }
+
+        // Initial state update (call this if you have checkboxes on page load)
+        // updateSelectionStateDispatch();
+
+        if (deleteSelectedBtnDispatch) {
+            deleteSelectedBtnDispatch.addEventListener('click', function() {
+                // Assuming you have a delete confirmation modal for dispatch data
+                // const deleteConfirmModalDispatch = new bootstrap.Modal(document.getElementById('deleteConfirmModalDispatch'));
+                // if (selectedRowsDispatch.size > 0) {
+                //     deleteConfirmModalDispatch.show();
+                // } else {
+                //     alert('Please select records to delete.');
+                // }
+                alert('Delete functionality for Dispatch Data is not yet fully implemented. Please select records and configure the backend.');
+            });
+        }
+
+        if (confirmBulkDeleteBtnDispatch) {
+            confirmBulkDeleteBtnDispatch.addEventListener('click', function() {
+                // Placeholder for your bulk delete logic for dispatch data
+                // const idsToDelete = Array.from(selectedRowsDispatch);
+                // fetch('/dispatch/bulk_delete', {
+                //     method: 'POST',
+                //     headers: { 'Content-Type': 'application/json' },
+                //     body: JSON.stringify({ ids: idsToDelete })
+                // })
+                // .then(response => response.json())
+                // .then(data => {
+                //     console.log('Delete successful:', data);
+                //     window.location.reload();
+                // })
+                // .catch(error => console.error('Error during bulk delete:', error));
+                alert('Bulk delete confirmation for Dispatch Data is not yet fully implemented.');
+            });
+        }
+
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+            new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
 {% endblock %}
 
 {% block extra_css %}

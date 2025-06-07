@@ -18,22 +18,37 @@ TABLES = {
     "tab_production": "tab_production"
 }
 
-def get_all_data(table_name: str, search_term: str = ""):
+# Define default limited columns for each table
+DEFAULT_LIMITED_COLUMNS = {
+    "tab_cutting": ["id", "date", "po_no", "sku", "product", "produced_qty"],
+    "tab_inprod": ["id", "po_no", "product", "order_qty", "produced_qty"],
+    "tab_production": ["date", "product", "produced_qty"]
+}
+
+def get_limited_columns(table_key):
+    columns = DEFAULT_LIMITED_COLUMNS.get(table_key)
+    print(f"Getting limited columns for {table_key}: {columns}")  # Debug log
+    return columns
+
+def get_all_data(table_name: str, search_term: str = "", columns: list[str] = None):
     """
-    Fetches all data for a given table, optionally filtered by a search term.
+    Fetches all data for a given table, optionally filtered by a search term and limited to specific columns.
     
     Args:
         table_name: The name of the database table.
         search_term: Optional search term to filter results.
+        columns: Optional list of column names to select. If None or empty, all columns are selected.
         
     Returns:
         A list of dictionaries, where each dictionary represents a row.
         Includes column names as keys.
     """
-    base_query = f"SELECT * FROM {table_name}"
+    select_columns = ", ".join([f'"{col}"' for col in columns]) if columns else "*"
+    base_query = f"SELECT {select_columns} FROM {table_name}"
     params = []
     
     search_term = search_term.strip()
+    print(f"[DEBUG] get_all_data - Table: {table_name}, Search Term: '{search_term}', Columns: {columns}") # DEBUG
 
     # Build dynamic WHERE clause if search term is provided
     if search_term:
@@ -65,7 +80,7 @@ def get_all_data(table_name: str, search_term: str = ""):
 
             # Construct the final query
             if search_conditions:
-                 query = base_query + " WHERE " + " OR ".join(search_conditions)
+                 query = base_query + " WHERE (" + " OR ".join(search_conditions) + ")"
             else:
                  # If no searchable columns found or search term doesn't match numeric, return base query
                  query = base_query
@@ -84,10 +99,12 @@ def get_all_data(table_name: str, search_term: str = ""):
         with get_db_connection() as conn:
             with conn.cursor() as cur:
                 logger.info(f"Executing query for {table_name} with search '{search_term}': {query} with {len(params)} params.")
+                print(f"[DEBUG] get_all_data - Executing SQL: {query}, Params: {params}") # DEBUG
                 cur.execute(query, params)
                 # Fetch column names
                 column_names = [desc[0] for desc in cur.description]
                 rows = cur.fetchall()
+                print(f"[DEBUG] get_all_data - Fetched {len(rows)} rows from database.") # DEBUG
                 
                 # Convert rows to list of dictionaries
                 data = []
@@ -102,10 +119,12 @@ def get_all_data(table_name: str, search_term: str = ""):
                          elif value is None:
                               record[key] = '' # Represent None as empty string in export or display
                      data.append(record)
+                print(f"[DEBUG] get_all_data - Returning {len(data)} processed rows.") # DEBUG
                 return data
                 
     except Exception as e:
         logger.error(f"Error fetching all data for table {table_name} with search '{search_term}': {str(e)}", exc_info=True)
+        print(f"[DEBUG] get_all_data - Error: {e}") # DEBUG
         return [] # Return empty list on error
 
 @bp.route("/production")
@@ -116,9 +135,15 @@ def production_data():
     except ValueError:
         page = 1
     limit = int(request.args.get("limit", 20))
+    column_view = request.args.get("column_view", "all")
+    print(f"Production page - Column view: {column_view}")  # Debug log
     
-    data = get_paginated_data(TABLES["production"], search, page, limit)
-    return render_template("production_data.html", **data)
+    columns_to_fetch = get_limited_columns("tab_inprod") if column_view == "limited" else None
+    print(f"Production page - Columns to fetch: {columns_to_fetch}")  # Debug log
+    
+    data = get_paginated_data(TABLES["production"], search, page, limit, columns=columns_to_fetch)
+    print(f"Production page - Headers: {data.get('headers')}")  # Debug log
+    return render_template("production_data.html", **data, column_view=column_view)
 
 @bp.route("/cutting")
 def cutting():
@@ -128,9 +153,15 @@ def cutting():
     except ValueError:
         page = 1
     limit = int(request.args.get("limit", 20))
+    column_view = request.args.get("column_view", "all")
+    print(f"Cutting page - Column view: {column_view}")  # Debug log
     
-    data = get_paginated_data(TABLES["cutting"], search, page, limit)
-    return render_template("cutting.html", **data)
+    columns_to_fetch = get_limited_columns("tab_cutting") if column_view == "limited" else None
+    print(f"Cutting page - Columns to fetch: {columns_to_fetch}")  # Debug log
+    
+    data = get_paginated_data(TABLES["cutting"], search, page, limit, columns=columns_to_fetch)
+    print(f"Cutting page - Headers: {data.get('headers')}")  # Debug log
+    return render_template("cutting.html", **data, column_view=column_view)
 
 @bp.route("/cutting/details/test", methods=['GET'])
 def cutting_details_test():
@@ -306,81 +337,84 @@ def tab_production():
     except ValueError:
         page = 1
     limit = int(request.args.get("limit", 20))
+    column_view = request.args.get("column_view", "all")
+    print(f"Tab Production page - Column view: {column_view}")  # Debug log
     
-    data = get_paginated_data(TABLES["tab_production"], search, page, limit)
-    return render_template("tab_production.html", **data)
+    columns_to_fetch = get_limited_columns("tab_production") if column_view == "limited" else None
+    print(f"Tab Production page - Columns to fetch: {columns_to_fetch}")  # Debug log
+    
+    data = get_paginated_data(TABLES["tab_production"], search, page, limit, columns=columns_to_fetch)
+    print(f"Tab Production page - Headers: {data.get('headers')}")  # Debug log
+    return render_template("tab_production.html", **data, column_view=column_view)
 
 @bp.route("/cutting/export", methods=['GET'])
 def export_cutting():
-    search_term = request.args.get("search", "").strip()
-    data = get_all_data(TABLES["cutting"], search_term)
-
+    search = request.args.get("search", "").strip()
+    print(f"[DEBUG] export_cutting - Received request for search: '{search}'") # DEBUG
+    data = get_all_data(TABLES["cutting"], search)
+    print(f"[DEBUG] export_cutting - Data received from get_all_data: {len(data)} rows.") # DEBUG
     if not data:
-        flash('No data found to export based on current search.', 'warning')
-        return redirect(url_for('data.cutting', search=search_term)) # Redirect back
+        flash("No data to export.", "warning")
+        return redirect(url_for('data.cutting'))
 
-    # Create a CSV in memory
     si = io.StringIO()
     cw = csv.writer(si)
 
-    # Write headers
-    cw.writerow(data[0].keys() if data else [])
-    # Write data rows
-    cw.writerows([list(row.values()) for row in data]) # Use list(row.values()) for csv.writer
+    headers = list(data[0].keys()) if data else [] # Ensure headers are a list
+    cw.writerow(headers)
 
-    output = si.getvalue()
+    for row in data:
+        cw.writerow([row.get(col, '') for col in headers]) # Use .get to handle missing keys gracefully
 
-    response = make_response(output)
-    response.headers["Content-Disposition"] = "attachment; filename=cutting_data.csv"
-    response.headers["Content-type"] = "text/csv"
-    return response
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = f"attachment; filename={TABLES['cutting']}_data.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
 
 @bp.route("/production/export", methods=['GET'])
 def export_production():
-    search_term = request.args.get("search", "").strip()
-    data = get_all_data(TABLES["production"], search_term)
-
+    search = request.args.get("search", "").strip()
+    print(f"[DEBUG] export_production - Received request for search: '{search}'") # DEBUG
+    data = get_all_data(TABLES["production"], search)
+    print(f"[DEBUG] export_production - Data received from get_all_data: {len(data)} rows.") # DEBUG
     if not data:
-        flash('No data found to export based on current search.', 'warning')
-        return redirect(url_for('data.production_data', search=search_term))
+        flash("No data to export.", "warning")
+        return redirect(url_for('data.production_data'))
 
-    # Create a CSV in memory
     si = io.StringIO()
     cw = csv.writer(si)
 
-    # Write headers
-    cw.writerow(data[0].keys() if data else [])
-    # Write data rows
-    cw.writerows([list(row.values()) for row in data]) # Use list(row.values()) for csv.writer
+    headers = list(data[0].keys()) if data else [] # Ensure headers are a list
+    cw.writerow(headers)
 
-    output = si.getvalue()
+    for row in data:
+        cw.writerow([row.get(col, '') for col in headers]) # Use .get to handle missing keys gracefully
 
-    response = make_response(output)
-    response.headers["Content-Disposition"] = "attachment; filename=production_data.csv"
-    response.headers["Content-type"] = "text/csv"
-    return response
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = f"attachment; filename={TABLES['production']}_data.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
 
 @bp.route("/tab-production/export", methods=['GET'])
 def export_tab_production():
-    search_term = request.args.get("search", "").strip()
-    data = get_all_data(TABLES["tab_production"], search_term)
-
+    search = request.args.get("search", "").strip()
+    print(f"[DEBUG] export_tab_production - Received request for search: '{search}'") # DEBUG
+    data = get_all_data(TABLES["tab_production"], search)
+    print(f"[DEBUG] export_tab_production - Data received from get_all_data: {len(data)} rows.") # DEBUG
     if not data:
-        flash('No data found to export based on current search.', 'warning')
-        return redirect(url_for('data.tab_production', search=search_term))
+        flash("No data to export.", "warning")
+        return redirect(url_for('data.tab_production'))
 
-    # Create a CSV in memory
     si = io.StringIO()
     cw = csv.writer(si)
 
-    # Write headers
-    cw.writerow(data[0].keys() if data else [])
-    # Write data rows
-    cw.writerows([list(row.values()) for row in data]) # Use list(row.values()) for csv.writer
+    headers = list(data[0].keys()) if data else [] # Ensure headers are a list
+    cw.writerow(headers)
 
-    output = si.getvalue()
+    for row in data:
+        cw.writerow([row.get(col, '') for col in headers]) # Use .get to handle missing keys gracefully
 
-    response = make_response(output)
-    response.headers["Content-Disposition"] = "attachment; filename=tab_production_data.csv"
-    response.headers["Content-type"] = "text/csv"
-    return response 
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = f"attachment; filename={TABLES['tab_production']}_data.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output 
