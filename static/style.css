@@ -1,10 +1,24 @@
+html {
+    background-color: #343a40; /* Match sidebar background to prevent white line */
+}
+
+html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: hidden; /* Ensure no horizontal overflow */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    height: 100vh; /* Ensure full viewport height */
+}
+
 /* General Styles */
 body {
     overflow-x: hidden; /* Prevent horizontal scrollbar from appearing due to off-screen content */
     background-color: #f8f9fa;
     font-family: 'Segoe UI', sans-serif;
-    padding-left: 0; /* Remove body padding as margin will be handled by page-content-wrapper */
-    padding-top: 56px; /* Approximate height of default Bootstrap navbar. Adjust if your navbar height is different. */
+    padding-left: 0 !important; /* Keep this for consistency, though page-content-wrapper handles margin-left */
+    padding-top: 0 !important; /* Remove body padding, it will be handled by page-content-wrapper */
+    border: none !important; /* Ensure no border */
+    outline: none !important; /* Ensure no outline */
 }
 
 /* Wrapper for sidebar and content */
@@ -18,29 +32,31 @@ body {
     min-height: calc(100vh - 56px); /* Full height minus navbar height. Adjust 56px if navbar height is different. */
     width: 60px; /* Default collapsed width */
     background-color: #343a40; /* Dark background */
-    border-right: 1px solid #e0e0e0; /* Subtle right border */
+    border-right: none !important; /* Remove right border */
     transition: width .25s ease-out; /* Transition for width change */
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1); /* Subtle shadow */
+    box-shadow: none !important; /* Remove shadow */
     position: fixed; /* Fix sidebar position */
-    top: 56px; /* Position below fixed navbar. Adjust 56px if navbar height is different. */
+    top: 56px; /* Match navbar height */
     left: 0;
     z-index: 1000; /* Ensure sidebar is above content */
     overflow-y: auto; /* Add vertical scroll if menu items exceed height */
     overflow-x: hidden; /* Hide overflowing text in collapsed state */
     color: #f8f9fa; /* Light text color for visible items */
+    margin-top: 0 !important; /* Ensure no margin at top */
+    border-top: none !important; /* Explicitly ensure no top border */
 }
 
 #sidebar-wrapper .sidebar-heading {
-    padding: 0.75rem 1rem;
+    padding: 0 !important; /* Remove all padding */
     font-size: 1.3rem;
-    color: #f8f9fa; /* Light text color */
-    border-bottom: 1px solid rgba(255,255,255,0.1); /* Lighter separator line */
+    color: #f8f9fa;
+    border-bottom: none !important;
     font-weight: bold;
     white-space: nowrap;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    height: 60px;
+    height: 56px; /* Match navbar height */
     position: relative;
     cursor: pointer;
 }
@@ -55,6 +71,7 @@ body:not(.sb-sidenav-toggled) #sidebar-wrapper .sidebar-heading span {
     color: #f8f9fa; /* Light icon color */
     flex-shrink: 0;
     transition: color 0.2s ease;
+    margin-right: 0; /* Remove margin to help centering when collapsed */
 }
 
 #sidebar-wrapper .sidebar-heading:hover i {
@@ -63,7 +80,8 @@ body:not(.sb-sidenav-toggled) #sidebar-wrapper .sidebar-heading span {
 
 #sidebar-wrapper .list-group {
     width: 100%;
-    padding-top: 0;
+    padding-top: 0 !important;
+    margin-top: 0 !important; /* Ensure no margin at top of list group */
 }
 
 #sidebar-wrapper .list-group-item {
@@ -112,6 +130,7 @@ body:not(.sb-sidenav-toggled) #sidebar-wrapper .sidebar-heading span {
     transition: margin-left .25s ease-out;
     /* Ensure content starts below the fixed navbar */
     margin-top: 0;
+    padding-top: 56px; /* Add padding to account for fixed navbar height */
 }
 
 #page-content-wrapper .container-fluid {
@@ -143,23 +162,23 @@ body.sb-sidenav-toggled #page-content-wrapper {
 
 /* Navbar Styles */
 .navbar {
-    box-shadow: 0 2px 4px rgba(0,0,0,.05);
-    /* Remove margin-bottom as layout is handled by padding-top on body */
-    margin-bottom: 0;
+    box-shadow: none !important; /* Ensure no shadow */
+    margin-bottom: 0 !important;
     background-color: #0d6efd !important; /* Blue background color */
-    border-bottom: 1px solid #0a58ca; /* Slightly darker blue border */
-    padding-top: 0.5rem; /* Adjust vertical padding of the navbar */
-    padding-bottom: 0.5rem; /* Adjust vertical padding of the navbar */
+    border-bottom: none !important; /* Ensure no bottom border */
+    padding: 0 !important; /* Remove padding */
     position: fixed; /* Make navbar fixed */
     top: 0;
     left: 0; /* Ensure navbar starts from the left edge */
     width: 100%; /* Full width */
     z-index: 1030; /* Ensure navbar is above sidebar and content */
+    height: 56px; /* Explicitly set navbar height */
+    outline: none !important; /* Remove any potential outline */
 }
 
 .navbar .container-fluid {
-    padding-right: 0.75rem; /* Adjust horizontal padding */
-    padding-left: 0.75rem;  /* Adjust horizontal padding */
+    padding-right: 0.5rem; /* Adjust horizontal padding */
+    padding-left: 0.5rem;  /* Adjust horizontal padding */
     align-items: center; /* Vertically align items */
 }
 
@@ -270,21 +289,21 @@ body.sb-sidenav-toggled #page-content-wrapper {
 @media (min-width: 768px) {
     body {
         padding-left: 0;
-        /* Adjust padding-top for larger screens if navbar height is different */
-        padding-top: 56px; /* Match navbar height */
+        padding-top: 56px;
     }
 
     #sidebar-wrapper {
         width: 60px;
         margin-left: 0;
-        top: 56px; /* Position below fixed navbar */
-        min-height: calc(100vh - 56px); /* Adjust calculation based on navbar height */
+        top: 56px;
+        min-height: calc(100vh - 56px);
+        margin-top: 0; /* Ensure no margin at top */
     }
 
     #page-content-wrapper {
         margin-left: 60px;
         width: calc(100% - 60px);
-        margin-top: 0; /* Ensure content starts at the top of the wrapper */
+        margin-top: 0;
     }
 
     body.sb-sidenav-toggled #sidebar-wrapper {
@@ -304,19 +323,19 @@ body.sb-sidenav-toggled #page-content-wrapper {
 
 @media (max-width: 767.98px) {
     body {
-         padding-left: 0;
-         /* Adjust padding-top for smaller screens if navbar height is different */
-         padding-top: 56px; /* Match navbar height */
+        padding-left: 0;
+        padding-top: 56px;
     }
 
     #sidebar-wrapper {
         margin-left: -250px;
         width: 250px;
-        top: 56px; /* Position below fixed navbar */
-        min-height: calc(100vh - 56px); /* Adjust calculation based on navbar height */
+        top: 56px;
+        min-height: calc(100vh - 56px);
+        margin-top: 0; /* Ensure no margin at top */
     }
 
-     body.sb-sidenav-toggled #sidebar-wrapper {
+    body.sb-sidenav-toggled #sidebar-wrapper {
         margin-left: 0;
     }
 
@@ -462,14 +481,6 @@ body.sb-sidenav-toggled #page-content-wrapper {
      width: 15%;
 }
 
-/* Ensure actions column doesn't take up excessive space */
-/* Since there are no action buttons, this might not be needed, but keeping for structure */
-.table th:last-child, .table td:last-child {
-     /* width: 1%; */ /* Remove fixed width if content is variable */
-     /* white-space: nowrap; */ /* Already set on td */
-}
-
-/* Style for buttons in the top right action area */
 .row.mb-3.align-items-center .justify-content-end .btn {
     margin-left: 0.5rem; /* Space between buttons */
 }
