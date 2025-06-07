@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 bp = Blueprint('data', __name__)
 
 TABLES = {
-    "production": "tab_inprod",
+    "shipment": "tab_inprod",
     "cutting": "tab_cutting",
     "tab_production": "tab_production"
 }
@@ -88,13 +88,20 @@ def production_data():
         page = 1
     limit = int(request.args.get("limit", 20))
     column_view = request.args.get("column_view", "all")
-    print(f"Production page - Column view: {column_view}")  # Debug log
     
     columns_to_fetch = get_limited_columns("tab_inprod") if column_view == "limited" else None
-    print(f"Production page - Columns to fetch: {columns_to_fetch}")  # Debug log
     
-    data = get_paginated_data(TABLES["production"], search, page, limit, columns=columns_to_fetch)
-    print(f"Production page - Headers: {data.get('headers')}")  # Debug log
+    data = get_paginated_data(TABLES["shipment"], search, page, limit, columns=columns_to_fetch)
+    
+    # Debug prints
+    print("=== DEBUG INFO ===")
+    print(f"Headers: {data.get('headers')}")
+    print(f"Number of rows: {len(data.get('rows', []))}")
+    if data.get('rows'):
+        print(f"First row keys: {list(data['rows'][0].keys())}")
+        print(f"First row values: {list(data['rows'][0].values())}")
+    print("=================")
+    
     return render_template("shipment.html", **data, column_view=column_view)
 
 @bp.route("/cutting-phase")
@@ -324,7 +331,7 @@ def export_cutting():
 @bp.route("/pending-order/export", methods=['GET'])
 def export_production():
     search = request.args.get("search", "")
-    data_rows = get_all_data(TABLES["production"], search_term=search, columns=None) # get_all_data now uses Supabase
+    data_rows = get_all_data(TABLES["shipment"], search_term=search, columns=None) # get_all_data now uses Supabase
 
     if not data_rows:
         flash('No data to export.', 'info')

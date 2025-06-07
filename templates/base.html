@@ -64,7 +64,7 @@
                 <a href="{{ url_for('data.production_data') }}" class="list-group-item list-group-item-action bg-dark text-white {% if request.endpoint == 'data.production_data' %}active{% endif %}">
                     <i class="bi bi-table me-2"></i> <span class="sidebar-text">Pending Order</span>
                </a>
-                <a href="#" class="list-group-item list-group-item-action bg-dark text-white">
+                <a href="{{ url_for('main.reports') }}" class="list-group-item list-group-item-action bg-dark text-white {% if request.endpoint == 'main.reports' %}active{% endif %}">
                     <i class="bi bi-graph-up me-2"></i> <span class="sidebar-text">Reports</span>
                 </a>
             </div>

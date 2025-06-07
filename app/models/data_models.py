@@ -191,4 +191,42 @@ def delete_cutting_records(record_ids: list[str]) -> int:
             raise Exception("Failed to delete records: No response data from Supabase")
     except Exception as e:
         print(f"Error deleting cutting records from Supabase: {e}")
-        raise 
+        raise
+
+def get_monthly_production_data():
+    """Fetches and aggregates monthly production data from Supabase."""
+    try:
+        # Query Supabase for production data, selecting date and produced_qty
+        response = supabase.table('tab_production').select('date, produced_qty').execute()
+        data = response.data
+
+        # Initialize dictionary to store monthly production sums
+        monthly_production = {}
+
+        for record in data:
+            record_date_str = record.get('date')
+            produced_qty = record.get('produced_qty', 0)
+            
+            if record_date_str and isinstance(produced_qty, (int, float)):
+                # Parse date string to get year and month
+                try:
+                    record_date = datetime.strptime(record_date_str, '%Y-%m-%d')
+                    month_key = record_date.strftime('%Y-%m') # e.g., '2023-01'
+                    
+                    if month_key not in monthly_production:
+                        monthly_production[month_key] = 0
+                    monthly_production[month_key] += produced_qty
+                except ValueError:
+                    print(f"Skipping invalid date format: {record_date_str}")
+                    continue
+
+        # Sort the monthly data by month
+        sorted_months = sorted(monthly_production.keys())
+        months = [datetime.strptime(m, '%Y-%m').strftime('%b %Y') for m in sorted_months] # e.g., 'Jan 2023'
+        production_data = [monthly_production[m] for m in sorted_months]
+        
+        return months, production_data
+
+    except Exception as e:
+        print(f"Error in get_monthly_production_data: {e}")
+        return [], [] 
