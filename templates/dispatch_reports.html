@@ -1,0 +1,1221 @@
+{% extends "base.html" %}
+
+{% block title %}Dispatch Reports - QueryOS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        transition: all 0.3s ease;
+    }
+    .card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    .stat-card {
+        border-left: 4px solid #0d6efd;
+    }
+    .stat-card .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    .stat-card .stat-label {
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+    .chart-container {
+        position: relative;
+        height: 400px;
+        width: 100%;
+    }
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    .export-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid rgba(0,0,0,.125);
+    }
+    .nav-pills .nav-link.active {
+        background-color: #0d6efd;
+    }
+    .nav-pills .nav-link {
+        color: #495057;
+    }
+    .trend-indicator {
+        font-size: 0.875rem;
+        margin-left: 0.5rem;
+    }
+    .trend-up {
+        color: #198754;
+    }
+    .trend-down {
+        color: #dc3545;
+    }
+    .filter-section {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.25rem;
+        margin-bottom: 1rem;
+    }
+    .comparison-card {
+        border: 2px solid #0d6efd;
+    }
+    .tooltip-inner {
+        max-width: 300px;
+    }
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .custom-tooltip {
+        position: absolute;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        pointer-events: none;
+        z-index: 1000;
+    }
+    .data-table th {
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 1;
+    }
+    .data-table {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .highlight-row {
+        background-color: rgba(13, 110, 253, 0.1) !important;
+    }
+    .search-box {
+        max-width: 300px;
+    }
+    .date-range-picker {
+        max-width: 400px;
+    }
+    .chart-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .legend-color {
+        width: 1rem;
+        height: 1rem;
+        border-radius: 2px;
+    }
+    /* Ensure chart view is block and table view is none by default */
+    .chart-view {
+        display: block;
+    }
+    .table-view {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Back Button and Title -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <a href="{{ url_for('main.reports') }}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> Back to Reports
+            </a>
+        </div>
+        <div class="col-md-6 text-end">
+            <h4 class="mb-0">Monthly Dispatch Report</h4>
+        </div>
+    </div>
+
+    <!-- Advanced Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Advanced Filters</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="yearSelect">Year</label>
+                                <select class="form-select" id="yearSelect" onchange="updateReport()">
+                            {% for y in years %}
+                            <option value="{{ y }}" {% if y|int == year|int %}selected{% endif %}>{{ y }}</option>
+                            {% endfor %}
+                        </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="branchFilter">Branch</label>
+                                <select class="form-select" id="branchFilter" onchange="updateReport()">
+                                    <option value="all">All Branches</option>
+                                    <option value="karur">Karur</option>
+                                    <option value="mumbai">Mumbai</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="channelFilter">Channel</label>
+                                <select class="form-select" id="channelFilter" onchange="updateReport()">
+                                    <option value="all">All Channels</option>
+                                    {% for channel in channel_data %}
+                                    <option value="{{ channel.channel }}">{{ channel.channel }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="repositoryFilter">Repository</label>
+                                <select class="form-select" id="repositoryFilter" onchange="updateReport()">
+                                    <option value="all">All Repositories</option>
+                                    {% for repo in repository_data %}
+                                    <option value="{{ repo.repository }}">{{ repo.repository }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Year Selection and Export -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-success" onclick="exportToExcel()">
+                                <i class="bi bi-file-excel"></i> Export to Excel
+                            </button>
+                            <button class="btn btn-primary" onclick="printReport()">
+                                <i class="bi bi-printer"></i> Print Report
+                            </button>
+                            <button class="btn btn-info" onclick="toggleComparison()">
+                                <i class="bi bi-graph-up"></i> Compare Years
+                            </button>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <div class="input-group search-box">
+                                <input type="text" class="form-control" placeholder="Search..." id="searchInput" onkeyup="filterData()">
+                                <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="stat-label">Total Shipments</div>
+                    <div class="stat-value">
+                        {{ monthly_data|sum(attribute='total')|number_format }}
+                        <span class="trend-indicator trend-up">
+                            <i class="bi bi-arrow-up"></i> 5.2%
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="stat-label">Karur Branch</div>
+                    <div class="stat-value">
+                        {{ monthly_data|sum(attribute='karur')|number_format }}
+                        <span class="trend-indicator trend-up">
+                            <i class="bi bi-arrow-up"></i> 3.1%
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="stat-label">Mumbai Branch</div>
+                    <div class="stat-value">
+                        {{ monthly_data|sum(attribute='mumbai')|number_format }}
+                        <span class="trend-indicator trend-down">
+                            <i class="bi bi-arrow-down"></i> 2.4%
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="stat-label">Average Monthly</div>
+                    <div class="stat-value">
+                        {{ (monthly_data|sum(attribute='total') / 12)|round|int|number_format }}
+                        <span class="trend-indicator trend-up">
+                            <i class="bi bi-arrow-up"></i> 4.8%
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Monthly Overview</h5>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-primary active" data-view="chart" data-target="monthly">Chart</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-view="table" data-target="monthly">Table</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="chart-container chart-view" id="monthlyChartContainer">
+                            <canvas id="monthlyChart"></canvas>
+                            </div>
+                            <div class="chart-legend" id="monthlyChartLegend"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="table-responsive data-table table-view" id="monthlyTableContainer">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Month</th>
+                                            <th>Karur</th>
+                                            <th>Mumbai</th>
+                                            <th>Total</th>
+                                            <th>Trend</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="monthlyTableBody">
+                                        {% for month in monthly_data %}
+                                        <tr>
+                                            <td>{{ month.month }}</td>
+                                            <td>{{ month.karur|number_format }}</td>
+                                            <td>{{ month.mumbai|number_format }}</td>
+                                            <td>{{ (month.karur + month.mumbai)|number_format }}</td>
+                                            <td>
+                                                {% if loop.index > 1 %}
+                                                    {% set prev_month = monthly_data[loop.index0 - 1] %}
+                                                    {% set current_total = month.karur + month.mumbai %}
+                                                    {% set prev_total = prev_month.karur + prev_month.mumbai %}
+                                                    {% set trend = ((current_total - prev_total) / prev_total * 100)|round(1) %}
+                                                    {% if trend > 0 %}
+                                                        <span class="trend-up"><i class="bi bi-arrow-up"></i> {{ trend }}%</span>
+                                                    {% else %}
+                                                        <span class="trend-down"><i class="bi bi-arrow-down"></i> {{ trend|abs }}%</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quarterly Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Quarterly Overview</h5>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-primary active" data-view="chart" data-target="quarterly">Chart</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-view="table" data-target="quarterly">Table</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="chart-container chart-view" id="quarterlyChartContainer">
+                            <canvas id="quarterlyChart"></canvas>
+                            </div>
+                            <div class="chart-legend" id="quarterlyChartLegend"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="table-responsive data-table table-view" id="quarterlyTableContainer">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Quarter</th>
+                                            <th>Karur</th>
+                                            <th>Mumbai</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="quarterlyTableBody">
+                                        {% for quarter in quarterly_data %}
+                                        <tr>
+                                            <td>{{ quarter.quarter }}</td>
+                                            <td>{{ quarter.karur|number_format }}</td>
+                                            <td>{{ quarter.mumbai|number_format }}</td>
+                                            <td>{{ quarter.total|number_format }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Channel Distribution -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Channel Distribution</h5>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-primary active" data-view="chart" data-target="channel">Chart</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-view="table" data-target="channel">Table</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="chart-container chart-view" id="channelChartContainer">
+                            <canvas id="channelChart"></canvas>
+                            </div>
+                            <div class="chart-legend" id="channelChartLegend"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="table-responsive data-table table-view" id="channelTableContainer">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Channel</th>
+                                            <th>Count</th>
+                                            <th>Percentage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="channelTableBody">
+                                        {% for channel in channel_data %}
+                                        <tr>
+                                            <td>{{ channel.channel }}</td>
+                                            <td>{{ channel.count|number_format }}</td>
+                                            <td>{{ channel.percentage }}%</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Repository Distribution -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Repository Distribution</h5>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-primary active" data-view="chart" data-target="repository">Chart</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-view="table" data-target="repository">Table</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="chart-container chart-view" id="repositoryChartContainer">
+                            <canvas id="repositoryChart"></canvas>
+                            </div>
+                            <div class="chart-legend" id="repositoryChartLegend"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="table-responsive data-table table-view" id="repositoryTableContainer">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Repository</th>
+                                            <th>Count</th>
+                                            <th>Percentage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="repositoryTableBody">
+                                        {% for repo in repository_data %}
+                                        <tr>
+                                            <td>{{ repo.repository }}</td>
+                                            <td>{{ repo.count|number_format }}</td>
+                                            <td>{{ repo.percentage }}%</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Branch Distribution -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Branch Distribution</h5>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-primary active" data-view="chart" data-target="branch">Chart</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-view="table" data-target="branch">Table</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="chart-container chart-view" id="branchChartContainer">
+                            <canvas id="branchChart"></canvas>
+                            </div>
+                            <div class="chart-legend" id="branchChartLegend"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="table-responsive data-table table-view" id="branchTableContainer">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Branch</th>
+                                            <th>Count</th>
+                                            <th>Percentage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="branchTableBody">
+                                        {% for branch_item in branch_data %}
+                                        <tr>
+                                            <td>{{ branch_item.branch }}</td>
+                                            <td>{{ branch_item.count|number_format }}</td>
+                                            <td>{{ branch_item.percentage }}%</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- SheetJS for Excel Export -->
+<script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+<!-- Date Range Picker -->
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
+
+<script>
+// Global variables for chart instances
+let monthlyChart, quarterlyChart, channelChart, repositoryChart, branchChart;
+
+// Initialize charts
+function initializeCharts() {
+    console.log('Initializing charts...');
+    // Destroy existing charts if they exist to prevent memory leaks and re-initialization issues
+    if (monthlyChart) monthlyChart.destroy();
+    if (quarterlyChart) quarterlyChart.destroy();
+    if (channelChart) channelChart.destroy();
+    if (repositoryChart) repositoryChart.destroy();
+    if (branchChart) branchChart.destroy();
+
+// Monthly Chart
+    const monthlyCtx = document.getElementById('monthlyChart');
+    if (monthlyCtx) {
+        monthlyChart = new Chart(monthlyCtx.getContext('2d'), {
+    type: 'line',
+    data: {
+        labels: {{ monthly_labels|tojson }},
+        datasets: [{
+            label: 'Karur',
+            data: {{ monthly_karur|tojson }},
+            borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                    tension: 0.1,
+                    fill: true
+        }, {
+            label: 'Mumbai',
+            data: {{ monthly_mumbai|tojson }},
+            borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                    tension: 0.1,
+                    fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+                maintainAspectRatio: false,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Monthly Dispatch Trends'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat().format(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+            }
+        },
+        scales: {
+            y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Shipments'
+                        }
+            }
+        }
+    }
+});
+        console.log('Monthly chart initialized:', monthlyChart);
+    } else {
+        console.warn('Monthly chart canvas not found!');
+    }
+
+// Quarterly Chart
+    const quarterlyCtx = document.getElementById('quarterlyChart');
+    if (quarterlyCtx) {
+        quarterlyChart = new Chart(quarterlyCtx.getContext('2d'), {
+    type: 'bar',
+    data: {
+        labels: {{ quarterly_labels|tojson }},
+        datasets: [{
+            label: 'Karur',
+            data: {{ quarterly_karur|tojson }},
+            backgroundColor: 'rgba(75, 192, 192, 0.5)',
+            borderColor: 'rgb(75, 192, 192)',
+            borderWidth: 1
+        }, {
+            label: 'Mumbai',
+            data: {{ quarterly_mumbai|tojson }},
+            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+            borderColor: 'rgb(255, 99, 132)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+                maintainAspectRatio: false,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Quarterly Dispatch Distribution'
+            }
+        },
+        scales: {
+            y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Shipments'
+                        }
+            }
+        }
+    }
+});
+        console.log('Quarterly chart initialized:', quarterlyChart);
+    } else {
+        console.warn('Quarterly chart canvas not found!');
+    }
+
+// Channel Chart
+    const channelCtx = document.getElementById('channelChart');
+    if (channelCtx) {
+        channelChart = new Chart(channelCtx.getContext('2d'), {
+            type: 'doughnut',
+    data: {
+        labels: {{ channel_labels|tojson }},
+        datasets: [{
+            data: {{ channel_data_values|tojson }},
+            backgroundColor: [
+                        'rgba(75, 192, 192, 0.5)',
+                'rgba(255, 99, 132, 0.5)',
+                        'rgba(255, 206, 86, 0.5)',
+                'rgba(54, 162, 235, 0.5)',
+                'rgba(153, 102, 255, 0.5)'
+            ],
+            borderColor: [
+                        'rgb(75, 192, 192)',
+                'rgb(255, 99, 132)',
+                        'rgb(255, 206, 86)',
+                'rgb(54, 162, 235)',
+                'rgb(153, 102, 255)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+                maintainAspectRatio: false,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Channel Distribution'
+            },
+            legend: {
+                position: 'right'
+            }
+        }
+    }
+});
+        console.log('Channel chart initialized:', channelChart);
+    } else {
+        console.warn('Channel chart canvas not found!');
+    }
+
+// Repository Chart
+    const repositoryCtx = document.getElementById('repositoryChart');
+    if (repositoryCtx) {
+        repositoryChart = new Chart(repositoryCtx.getContext('2d'), {
+            type: 'pie',
+    data: {
+        labels: {{ repository_labels|tojson }},
+        datasets: [{
+            data: {{ repository_data_values|tojson }},
+            backgroundColor: [
+                        'rgba(75, 192, 192, 0.5)',
+                'rgba(255, 99, 132, 0.5)',
+                        'rgba(255, 206, 86, 0.5)',
+                'rgba(54, 162, 235, 0.5)',
+                'rgba(153, 102, 255, 0.5)'
+            ],
+            borderColor: [
+                        'rgb(75, 192, 192)',
+                'rgb(255, 99, 132)',
+                        'rgb(255, 206, 86)',
+                'rgb(54, 162, 235)',
+                'rgb(153, 102, 255)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+                maintainAspectRatio: false,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Repository Distribution'
+            },
+            legend: {
+                position: 'right'
+            }
+        }
+    }
+});
+        console.log('Repository chart initialized:', repositoryChart);
+    } else {
+        console.warn('Repository chart canvas not found!');
+    }
+
+// Branch Chart
+    const branchCtx = document.getElementById('branchChart');
+    if (branchCtx) {
+        branchChart = new Chart(branchCtx.getContext('2d'), {
+            type: 'doughnut',
+    data: {
+        labels: {{ branch_labels|tojson }},
+        datasets: [{
+            data: {{ branch_data_values|tojson }},
+            backgroundColor: [
+                'rgba(75, 192, 192, 0.5)',
+                        'rgba(255, 99, 132, 0.5)'
+            ],
+            borderColor: [
+                'rgb(75, 192, 192)',
+                        'rgb(255, 99, 132)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+                maintainAspectRatio: false,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Branch Distribution'
+            },
+            legend: {
+                position: 'right'
+            }
+        }
+    }
+});
+        console.log('Branch chart initialized:', branchChart);
+    } else {
+        console.warn('Branch chart canvas not found!');
+    }
+}
+
+// Update charts with new data
+function updateCharts(data) {
+    console.log('Updating charts with data:', data); // Debugging
+    if (monthlyChart) {
+        monthlyChart.data.labels = data.monthly_labels;
+        monthlyChart.data.datasets[0].data = data.monthly_karur;
+        monthlyChart.data.datasets[1].data = data.monthly_mumbai;
+        monthlyChart.update();
+        console.log('Monthly chart updated.');
+    }
+
+    if (quarterlyChart) {
+        quarterlyChart.data.labels = data.quarterly_labels;
+        quarterlyChart.data.datasets[0].data = data.quarterly_karur;
+        quarterlyChart.data.datasets[1].data = data.quarterly_mumbai;
+        quarterlyChart.update();
+        console.log('Quarterly chart updated.');
+    }
+
+    if (channelChart) {
+        channelChart.data.labels = data.channel_labels;
+        channelChart.data.datasets[0].data = data.channel_data_values;
+        channelChart.update();
+        console.log('Channel chart updated.');
+    }
+
+    if (repositoryChart) {
+        repositoryChart.data.labels = data.repository_labels;
+        repositoryChart.data.datasets[0].data = data.repository_data_values;
+        repositoryChart.update();
+        console.log('Repository chart updated.');
+    }
+
+    if (branchChart) {
+        branchChart.data.labels = data.branch_labels;
+        branchChart.data.datasets[0].data = data.branch_data_values;
+        branchChart.update();
+        console.log('Branch chart updated.');
+    }
+}
+
+// Update tables with new data
+function updateTables(data) {
+    console.log('Updating tables with data:', data); // Debugging
+    // Update Monthly Table
+    const monthlyTable = document.getElementById('monthlyTableBody');
+    if (monthlyTable) {
+        monthlyTable.innerHTML = '';
+        data.monthly_data.forEach((month, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${month.month}</td>
+                <td>${new Intl.NumberFormat().format(month.karur)}</td>
+                <td>${new Intl.NumberFormat().format(month.mumbai)}</td>
+                <td>${new Intl.NumberFormat().format(month.karur + month.mumbai)}</td>
+                <td>
+                    ${index > 0 ? calculateTrend(data.monthly_data[index - 1], month) : '-'}
+                </td>
+            `;
+            monthlyTable.appendChild(row);
+        });
+        console.log('Monthly table updated.');
+    } else {
+        console.warn('Monthly table body not found!');
+    }
+
+    // Update Quarterly Table
+    const quarterlyTable = document.getElementById('quarterlyTableBody');
+    if (quarterlyTable) {
+        quarterlyTable.innerHTML = '';
+        data.quarterly_data.forEach(quarter => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${quarter.quarter}</td>
+                <td>${new Intl.NumberFormat().format(quarter.karur)}</td>
+                <td>${new Intl.NumberFormat().format(quarter.mumbai)}</td>
+                <td>${new Intl.NumberFormat().format(quarter.total)}</td>
+            `;
+            quarterlyTable.appendChild(row);
+        });
+        console.log('Quarterly table updated.');
+    } else {
+        console.warn('Quarterly table body not found!');
+    }
+
+    // Update Channel Table
+    const channelTable = document.getElementById('channelTableBody');
+    if (channelTable) {
+        channelTable.innerHTML = '';
+        data.channel_data.forEach(channel => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${channel.channel}</td>
+                <td>${new Intl.NumberFormat().format(channel.count)}</td>
+                <td>${channel.percentage}%</td>
+            `;
+            channelTable.appendChild(row);
+        });
+        console.log('Channel table updated.');
+    } else {
+        console.warn('Channel table body not found!');
+    }
+
+    // Update Repository Table
+    const repositoryTable = document.getElementById('repositoryTableBody');
+    if (repositoryTable) {
+        repositoryTable.innerHTML = '';
+        data.repository_data.forEach(repo => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${repo.repository}</td>
+                <td>${new Intl.NumberFormat().format(repo.count)}</td>
+                <td>${repo.percentage}%</td>
+            `;
+            repositoryTable.appendChild(row);
+        });
+        console.log('Repository table updated.');
+    } else {
+        console.warn('Repository table body not found!');
+    }
+
+    // Update Branch Table
+    const branchTable = document.getElementById('branchTableBody');
+    if (branchTable) {
+        branchTable.innerHTML = '';
+        data.branch_data.forEach(branch_item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${branch_item.branch}</td>
+                <td>${new Intl.NumberFormat().format(branch_item.count)}</td>
+                <td>${branch_item.percentage}%</td>
+            `;
+            branchTable.appendChild(row);
+        });
+        console.log('Branch table updated.');
+    } else {
+        console.warn('Branch table body not found!');
+    }
+
+    // Update summary statistics
+    const totalShipments = data.monthly_data.reduce((sum, m) => sum + m.total, 0);
+    const karurTotal = data.monthly_data.reduce((sum, m) => sum + m.karur, 0);
+    const mumbaiTotal = data.monthly_data.reduce((sum, m) => sum + m.mumbai, 0);
+    const avgMonthly = totalShipments / 12;
+
+    const totalShipmentsElement = document.querySelector('.stat-card:nth-child(1) .stat-value');
+    if (totalShipmentsElement) {
+        totalShipmentsElement.innerHTML = `${new Intl.NumberFormat().format(totalShipments)} <span class="trend-indicator trend-up"><i class="bi bi-arrow-up"></i> 5.2%</span>`;
+    }
+    const karurBranchElement = document.querySelector('.stat-card:nth-child(2) .stat-value');
+    if (karurBranchElement) {
+        karurBranchElement.innerHTML = `${new Intl.NumberFormat().format(karurTotal)} <span class="trend-indicator trend-up"><i class="bi bi-arrow-up"></i> 3.1%</span>`;
+    }
+    const mumbaiBranchElement = document.querySelector('.stat-card:nth-child(3) .stat-value');
+    if (mumbaiBranchElement) {
+        mumbaiBranchElement.innerHTML = `${new Intl.NumberFormat().format(mumbaiTotal)} <span class="trend-indicator trend-down"><i class="bi bi-arrow-down"></i> 2.4%</span>`;
+    }
+    const avgMonthlyElement = document.querySelector('.stat-card:nth-child(4) .stat-value');
+    if (avgMonthlyElement) {
+        avgMonthlyElement.innerHTML = `${new Intl.NumberFormat().format(Math.round(avgMonthly))} <span class="trend-indicator trend-up"><i class="bi bi-arrow-up"></i> 4.8%</span>`;
+    }
+    console.log('Summary statistics updated.');
+}
+
+// Calculate trend percentage
+function calculateTrend(prevMonth, currentMonth) {
+    const prevTotal = prevMonth.karur + prevMonth.mumbai;
+    const currentTotal = currentMonth.karur + currentMonth.mumbai;
+    
+    if (prevTotal === 0) return '-'; // Avoid division by zero
+
+    const trend = ((currentTotal - prevTotal) / prevTotal * 100).toFixed(1);
+    
+    if (trend > 0) {
+        return `<span class="trend-up"><i class="bi bi-arrow-up"></i> ${trend}%</span>`;
+    } else if (trend < 0) {
+        return `<span class="trend-down"><i class="bi bi-arrow-down"></i> ${Math.abs(trend)}%</span>`;
+    } else {
+        return '<span class="trend-neutral">0%</span>'; // No change
+    }
+}
+
+// Update comparison charts
+function updateComparisonCharts(data) {
+    console.log('Updating comparison charts with data:', data);
+    // Update Monthly Chart with comparison data
+    if (monthlyChart) {
+        monthlyChart.data.datasets = [
+            {
+                label: `${data.year1} - Karur`,
+                data: data.year1_karur,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                tension: 0.1,
+                fill: true
+            },
+            {
+                label: `${data.year1} - Mumbai`,
+                data: data.year1_mumbai,
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                tension: 0.1,
+                fill: true
+            },
+            {
+                label: `${data.year2} - Karur`,
+                data: data.year2_karur,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.05)',
+                borderDash: [5, 5],
+                tension: 0.1,
+                fill: true
+            },
+            {
+                label: `${data.year2} - Mumbai`,
+                data: data.year2_mumbai,
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.05)',
+                borderDash: [5, 5],
+                tension: 0.1,
+                fill: true
+            }
+        ];
+        monthlyChart.update();
+        console.log('Comparison chart updated.');
+    }
+}
+
+// Update report based on filters
+function updateReport() {
+    showLoading();
+    const year = document.getElementById('yearSelect').value;
+    const branch = document.getElementById('branchFilter').value;
+    const channel = document.getElementById('channelFilter').value;
+    const repository = document.getElementById('repositoryFilter').value;
+
+    // Construct URL with all filter parameters
+    const newUrl = `/reports/api/dispatch/monthly?year=${year}&branch=${branch}&channel=${channel}&repository=${repository}`;
+    
+    // Update browser URL without reloading the page
+    history.pushState({ year, branch, channel, repository }, '', `/reports/dispatch/monthly?year=${year}&branch=${branch}&channel=${channel}&repository=${repository}`);
+
+    // Make AJAX call to update data
+    fetch(newUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            updateCharts(data);
+            updateTables(data);
+            hideLoading();
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+            hideLoading();
+        });
+}
+
+// Toggle comparison view
+function toggleComparison() {
+    const comparisonYear = prompt('Enter year to compare with:', (new Date().getFullYear() - 1).toString());
+    if (comparisonYear) {
+        showLoading();
+        fetch(`/reports/api/dispatch/monthly/compare?year1={{ year }}&year2=${comparisonYear}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                updateComparisonCharts(data);
+                hideLoading();
+            })
+            .catch(error => {
+                console.error('Error in comparison fetch:', error);
+                hideLoading();
+            });
+    }
+}
+
+// Filter data based on search input
+function filterData() {
+    const searchText = document.getElementById('searchInput').value.toLowerCase();
+    const tables = document.querySelectorAll('.data-table tbody tr');
+    
+    tables.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchText) ? '' : 'none';
+    });
+}
+
+// Clear search
+function clearSearch() {
+    document.getElementById('searchInput').value = '';
+    filterData();
+}
+
+// Show loading overlay
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+// Hide loading overlay
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// Export to Excel
+function exportToExcel() {
+    showLoading();
+    
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    
+    // Add monthly data
+    const monthlyWS = XLSX.utils.json_to_sheet({{ monthly_data|tojson }});
+    XLSX.utils.book_append_sheet(wb, monthlyWS, "Monthly Data");
+    
+    // Add quarterly data
+    const quarterlyWS = XLSX.utils.json_to_sheet({{ quarterly_data|tojson }});
+    XLSX.utils.book_append_sheet(wb, quarterlyWS, "Quarterly Data");
+    
+    // Add channel data
+    const channelWS = XLSX.utils.json_to_sheet({{ channel_data|tojson }});
+    XLSX.utils.book_append_sheet(wb, channelWS, "Channel Data");
+    
+    // Add repository data
+    const repositoryWS = XLSX.utils.json_to_sheet({{ repository_data|tojson }});
+    XLSX.utils.book_append_sheet(wb, repositoryWS, "Repository Data");
+    
+    // Add branch data
+    const branchWS = XLSX.utils.json_to_sheet({{ branch_data|tojson }});
+    XLSX.utils.book_append_sheet(wb, branchWS, "Branch Data");
+    
+    // Save the file
+    XLSX.writeFile(wb, "dispatch_report_{{ year }}.xlsx");
+    hideLoading();
+}
+
+// Print report
+function printReport() {
+    window.print();
+}
+
+// View toggle functionality
+document.querySelectorAll('[data-view]').forEach(button => {
+    button.addEventListener('click', function() {
+        const view = this.dataset.view;
+        const target = this.dataset.target;
+        const card = this.closest('.card');
+        const chartContainer = card.querySelector(`#${target}ChartContainer`);
+        const tableContainer = card.querySelector(`#${target}TableContainer`);
+        
+        // Remove active from all buttons in the group
+        this.parentNode.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
+        // Add active to the clicked button
+        this.classList.add('active');
+
+        if (view === 'chart') {
+            chartContainer.style.display = 'block';
+            tableContainer.style.display = 'none';
+        } else {
+            chartContainer.style.display = 'none';
+            tableContainer.style.display = 'block';
+        }
+    });
+});
+
+// Initialize charts when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();
+    
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Set initial view state for all sections (chart active, table hidden)
+    document.querySelectorAll('.btn-group').forEach(group => {
+        const chartButton = group.querySelector('[data-view="chart"]');
+        const tableButton = group.querySelector('[data-view="table"]');
+        const target = chartButton.dataset.target;
+        const card = group.closest('.card');
+        const chartContainer = card.querySelector(`#${target}ChartContainer`);
+        const tableContainer = card.querySelector(`#${target}TableContainer`);
+
+        if (chartButton && tableButton && chartContainer && tableContainer) {
+            chartButton.classList.add('active');
+            tableButton.classList.remove('active');
+            chartContainer.style.display = 'block';
+            tableContainer.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %} 

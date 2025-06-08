@@ -45,22 +45,21 @@
             </div>
         </div>
 
-        <!-- Order Reports Card -->
+        <!-- Dispatch Reports Card -->
         <div class="col-md-4">
-            <a href="{{ url_for('main.reports') }}" class="text-decoration-none text-dark">
-                <div class="card h-100 shadow-sm report-card coming-soon-card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <i class="bi bi-cart-check display-6 text-primary me-3"></i>
-                            <h5 class="card-title mb-0">Order Reports</h5>
-                        </div>
-                        <p class="card-text text-muted">Track order status, fulfillment metrics, and delivery performance.</p>
-                        <div class="mt-3">
-                            <span class="badge bg-info">Coming Soon</span>
-                        </div>
+            <div class="card h-100 shadow-sm report-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-cart-check display-6 text-primary me-3"></i>
+                        <h5 class="card-title mb-0">Dispatch Reports</h5>
+                    </div>
+                    <p class="card-text text-muted">Track dispatch status, fulfillment metrics, and delivery performance.</p>
+                    <div class="list-group list-group-flush mt-3">
+                        <a href="{{ url_for('dispatch.monthly_dispatch_report') }}" class="list-group-item list-group-item-action">Monthly Dispatch</a>
+                        <a href="{{ url_for('dispatch.dispatch_summary_report') }}" class="list-group-item list-group-item-action">Dispatch Summary</a>
                     </div>
                 </div>
-            </a>
+            </div>
         </div>
     </div>
 

@@ -33,8 +33,18 @@ def create_app():
         return User(user_id)
     
     # Register blueprints
-    from app.routes import main, data
+    from app.routes import main, data, dispatch_reports
     app.register_blueprint(main.bp)
     app.register_blueprint(data.bp, url_prefix='/data')
+    app.register_blueprint(dispatch_reports.bp)
+    
+    # Register custom Jinja2 filters
+    @app.template_filter('number_format')
+    def number_format(value):
+        """Format numbers with commas as thousand separators."""
+        try:
+            return "{:,}".format(int(value))
+        except (ValueError, TypeError):
+            return value
     
     return app 
