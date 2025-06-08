@@ -35,6 +35,6 @@ def create_app():
     # Register blueprints
     from app.routes import main, data
     app.register_blueprint(main.bp)
-    app.register_blueprint(data.bp)
+    app.register_blueprint(data.bp, url_prefix='/data')
     
     return app 

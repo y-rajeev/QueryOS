@@ -1,0 +1,52 @@
+{% if record %}
+<form id="editForm" method="POST" action="{{ url_for('data.edit_production', id=record.id) }}" onsubmit="showLoading();">
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Date</label>
+                <input type="date" class="form-control form-control-sm" name="date" value="{{ record.date }}" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">PO No</label>
+                <input type="text" class="form-control form-control-sm" name="po_no" value="{{ record.po_no }}" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">SKU</label>
+                <input type="text" class="form-control form-control-sm" name="sku" value="{{ record.sku }}" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Product</label>
+                <input type="text" class="form-control form-control-sm" name="product" value="{{ record.product }}" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Line</label>
+                <input type="text" class="form-control form-control-sm" name="line" value="{{ record.line }}" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Design</label>
+                <input type="text" class="form-control form-control-sm" name="design" value="{{ record.design }}" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Size</label>
+                <input type="text" class="form-control form-control-sm" name="size" value="{{ record.size }}" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Produced Quantity</label>
+                <input type="number" class="form-control form-control-sm" name="produced_qty" value="{{ record.produced_qty }}" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Rejection</label>
+                <input type="number" class="form-control form-control-sm" name="rejection" value="{{ record.rejection }}" required>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+    </div>
+</form>
+{% else %}
+<div class="alert alert-danger">
+    Record not found.
+</div>
+{% endif %} 

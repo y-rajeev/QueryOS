@@ -594,6 +594,144 @@
             // Initial update of active filter count on page load
             updateActiveFilterCount();
 
+            // Add double-click event listener to table rows
+            const tableRows = document.querySelectorAll('.table-row-selectable');
+            tableRows.forEach(row => {
+                row.addEventListener('dblclick', function() {
+                    const recordId = this.dataset.id;
+                    // Fetch the record data and show edit modal
+                    fetch(`/data/cutting-phase/details/${recordId}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.message === 'Record not found') {
+                                alert('Record not found');
+                                return;
+                            }
+                            // Format the date for the input field
+                            if (data.date) {
+                                data.date = data.date.split('T')[0];
+                            }
+                            // Populate the form fields
+                            const editModal = document.getElementById('editModal');
+                            const form = editModal.querySelector('form');
+                            form.action = `/data/cutting-phase/edit/${recordId}`;
+                            
+                            // Set form field values
+                            Object.keys(data).forEach(key => {
+                                const input = form.querySelector(`[name="${key}"]`);
+                                if (input) {
+                                    input.value = data[key];
+                                }
+                            });
+                            
+                            // Show the modal
+                            const modal = new bootstrap.Modal(editModal);
+                            modal.show();
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert(`Error loading record data: ${error.message}`);
+                        });
+                });
+            });
+
+            // Existing code for delete functionality
+            const deleteSelectedBtn = document.getElementById('deleteSelectedBtnDropdown');
+            const confirmBulkDeleteBtn = document.getElementById('confirmBulkDeleteBtn');
+            const table = document.querySelector('.table');
+
+            // Event listeners for column view options
+            const listViewDropdown = document.getElementById('listViewDropdownCutting');
+            if (listViewDropdown) {
+                listViewDropdown.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        const columnView = this.dataset.columnView;
+                        const currentUrl = new URL(window.location.href);
+                        currentUrl.searchParams.set('column_view', columnView);
+                        window.location.href = currentUrl.toString();
+                    });
+                });
+            }
+
+            let selectedRows = new Set();
+
+            // Update selection state function
+            function updateSelectionState() {
+                const rowSelectCheckboxes = document.querySelectorAll('.row-select');
+                selectedRows.clear();
+                rowSelectCheckboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        selectedRows.add(checkbox.closest('tr').dataset.id);
+                    }
+                });
+
+                if (deleteSelectedBtn) {
+                    deleteSelectedBtn.disabled = selectedRows.size === 0;
+                }
+            }
+
+            // Initial state update
+            updateSelectionState();
+
+            // Event listener for the delete button
+            if (deleteSelectedBtn) {
+                deleteSelectedBtn.addEventListener('click', function() {
+                    const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+                    if (selectedRows.size > 0) {
+                        deleteConfirmModal.show();
+                    } else {
+                        alert('Please select records to delete.');
+                    }
+                });
+            }
+
+            // Event listener for the confirmation button
+            if (confirmBulkDeleteBtn) {
+                confirmBulkDeleteBtn.addEventListener('click', function() {
+                    const idsToDelete = Array.from(selectedRows);
+                    fetch('/data/cutting-phase/bulk_delete', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ids: idsToDelete })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.message === 'Records deleted successfully') {
+                            window.location.reload();
+                        } else {
+                            alert('Error deleting records: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error deleting records');
+                    });
+                });
+            }
+
+            // Select all checkbox functionality
+            const selectAllCheckbox = document.getElementById('selectAll');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const checkboxes = document.querySelectorAll('.row-select');
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = this.checked;
+                    });
+                    updateSelectionState();
+                });
+            }
+
+            // Individual checkbox change handler
+            const rowCheckboxes = document.querySelectorAll('.row-select');
+            rowCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateSelectionState);
+            });
         });
     </script>
 {% endblock %} 

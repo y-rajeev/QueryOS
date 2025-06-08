@@ -298,7 +298,141 @@ def tab_production():
     
     data = get_paginated_data(TABLES["tab_production"], search, page, limit, columns=columns_to_fetch)
     print(f"Tab Production page - Headers: {data.get('headers')}")  # Debug log
-    return render_template("tab_production.html", **data, column_view=column_view)
+    return render_template("tab_production.html", **data, column_view=column_view, today_date=date.today().isoformat())
+
+@bp.route("/production-phase/details/<string:record_id>", methods=['GET'])
+def get_production_details(record_id):
+    """
+    Fetches full details for a single production record using Supabase.
+    """
+    try:
+        logger.info(f"Attempting to fetch details for record ID: {record_id} from Supabase.")
+        response = supabase.table('tab_production').select('*').eq('id', record_id).execute()
+        if response.data:
+            record_details = response.data[0]
+            logger.info(f"Successfully fetched details for record ID: {record_id} from Supabase.")
+            return jsonify(record_details)
+        else:
+            logger.warning(f"Record with ID {record_id} not found in Supabase: {response.count}")
+            return jsonify({'message': 'Record not found'}), 404
+
+    except Exception as e:
+        logger.error(f"Error fetching production record details for ID {record_id} from Supabase: {str(e)}", exc_info=True)
+        return jsonify({'message': 'Internal Server Error'}), 500
+
+@bp.route("/production-phase/add", methods=['POST'])
+def add_production():
+    try:
+        data = request.form
+        record_id = str(uuid.uuid4())
+
+        # Date: Use today's date if not provided
+        date_str = data.get('date')
+        if date_str:
+            record_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        else:
+            record_date = date.today()
+
+        produced_qty = int(data.get('produced_qty')) if data.get('produced_qty') else 0
+        rejection = int(data.get('rejection')) if data.get('rejection') else 0
+
+        new_record = {
+            "id": record_id,
+            "input_timestamp": datetime.now().isoformat(),
+            "date": record_date.isoformat(),
+            "po_no": data.get('po_no'),
+            "sku": data.get('sku'),
+            "product": data.get('product'),
+            "line": data.get('line'),
+            "design": data.get('design'),
+            "size": data.get('size'),
+            "produced_qty": produced_qty,
+            "rejection": rejection
+        }
+
+        response = supabase.table('tab_production').insert(new_record).execute()
+        if response.data:
+            flash('Production data added successfully!', 'success')
+        else:
+            raise Exception("Failed to add record: No response data from Supabase")
+        
+        return redirect(url_for('data.tab_production'))
+
+    except Exception as e:
+        logger.error(f"Error adding production data to Supabase: {str(e)}", exc_info=True)
+        flash(f'Error adding production data: {str(e)}', 'error')
+        return redirect(url_for('data.tab_production'))
+
+@bp.route("/production-phase/edit/<string:id>", methods=['GET', 'POST'])
+def edit_production(id):
+    if request.method == 'POST':
+        try:
+            data = request.form
+            produced_qty = int(data.get('produced_qty')) if data.get('produced_qty') else 0
+            rejection = int(data.get('rejection')) if data.get('rejection') else 0
+
+            updated_record_data = {
+                "date": datetime.strptime(data.get('date'), '%Y-%m-%d').date(),
+                "po_no": data.get('po_no'),
+                "sku": data.get('sku'),
+                "product": data.get('product'),
+                "line": data.get('line'),
+                "design": data.get('design'),
+                "size": data.get('size'),
+                "produced_qty": produced_qty,
+                "rejection": rejection
+            }
+
+            response = supabase.table('tab_production').update(updated_record_data).eq('id', id).execute()
+            if response.data:
+                flash('Production data updated successfully!', 'success')
+            else:
+                raise Exception("Failed to update record: No response data from Supabase")
+            
+            return redirect(url_for('data.tab_production'))
+
+        except Exception as e:
+            logger.error(f"Error editing production data in Supabase: {str(e)}", exc_info=True)
+            flash(f'Error editing production data: {str(e)}', 'error')
+            return redirect(url_for('data.tab_production'))
+    
+    else: # GET request for edit_production
+        record = None
+        try:
+            response = supabase.table('tab_production').select('*').eq('id', id).execute()
+            if response.data:
+                record = response.data[0]
+                # Format date for HTML input
+                if 'date' in record:
+                    record['date'] = record['date'].split('T')[0] if 'T' in record['date'] else record['date']
+            else:
+                flash('Record not found.', 'error')
+                return redirect(url_for('data.tab_production'))
+        except Exception as e:
+            logger.error(f"Error fetching record for edit from Supabase: {str(e)}", exc_info=True)
+            flash(f'Error fetching record for edit: {str(e)}', 'error')
+            return redirect(url_for('data.tab_production'))
+
+        return render_template('components/edit_production_modal_content.html', record=record)
+
+@bp.route("/production-phase/bulk_delete", methods=['POST'])
+def bulk_delete_production():
+    selected_ids = request.json.get('ids', [])
+    if not selected_ids:
+        return jsonify({'message': 'No records selected for deletion.'}), 400
+
+    try:
+        response = supabase.table('tab_production').delete().in_('id', selected_ids).execute()
+        if response.data is not None:
+            deleted_count = len(response.data)
+            flash(f'{deleted_count} records deleted successfully!', 'success')
+            return jsonify({'message': 'Records deleted successfully'}), 200
+        else:
+            raise Exception("Failed to delete records: No response data from Supabase")
+
+    except Exception as e:
+        logger.error(f"Error during bulk delete from Supabase: {str(e)}", exc_info=True)
+        return jsonify({'message': f'Error deleting records: {str(e)}'}), 500
 
 @bp.route("/cutting-phase/export", methods=['GET'])
 def export_cutting():
