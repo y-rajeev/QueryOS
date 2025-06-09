@@ -248,12 +248,12 @@
         <div class="col-md-3">
             <div class="card stat-card">
                 <div class="card-body">
-                    <div class="stat-label">Total Shipments</div>
+                    <div class="stat-label">Total Quantity</div>
                     <div class="stat-value">
                         {{ monthly_data|sum(attribute='total')|number_format }}
-                        <span class="trend-indicator trend-up">
+                        <!-- <span class="trend-indicator trend-up">
                             <i class="bi bi-arrow-up"></i> 5.2%
-                        </span>
+                        </span> -->
                     </div>
                 </div>
             </div>
@@ -264,9 +264,9 @@
                     <div class="stat-label">Karur Branch</div>
                     <div class="stat-value">
                         {{ monthly_data|sum(attribute='karur')|number_format }}
-                        <span class="trend-indicator trend-up">
+                        <!-- <span class="trend-indicator trend-up">
                             <i class="bi bi-arrow-up"></i> 3.1%
-                        </span>
+                        </span> -->
                     </div>
                 </div>
             </div>
@@ -277,9 +277,9 @@
                     <div class="stat-label">Mumbai Branch</div>
                     <div class="stat-value">
                         {{ monthly_data|sum(attribute='mumbai')|number_format }}
-                        <span class="trend-indicator trend-down">
+                        <!-- <span class="trend-indicator trend-down">
                             <i class="bi bi-arrow-down"></i> 2.4%
-                        </span>
+                        </span> -->
                     </div>
                 </div>
             </div>
@@ -290,9 +290,9 @@
                     <div class="stat-label">Average Monthly</div>
                     <div class="stat-value">
                         {{ (monthly_data|sum(attribute='total') / 12)|round|int|number_format }}
-                        <span class="trend-indicator trend-up">
+                        <!-- <span class="trend-indicator trend-up">
                             <i class="bi bi-arrow-up"></i> 4.8%
-                        </span>
+                        </span> -->
                     </div>
                 </div>
             </div>
@@ -631,7 +631,7 @@ function initializeCharts() {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Number of Shipments'
+                            text: 'Quantity'
                         }
             }
         }
@@ -677,7 +677,7 @@ function initializeCharts() {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Number of Shipments'
+                            text: 'Quantity'
                         }
             }
         }
