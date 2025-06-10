@@ -194,36 +194,15 @@ def delete_cutting_records(record_ids: list[str]) -> int:
         raise
 
 def get_monthly_production_data():
-    """Fetches and aggregates monthly production data from Supabase."""
+    """Fetches and aggregates monthly production data from Supabase using the monthly_production_summary view."""
     try:
-        # Query Supabase for production data, selecting date and produced_qty
-        response = supabase.table('tab_production').select('date, produced_qty').execute()
+        # Query the monthly_production_summary view, which already provides aggregated and sorted data
+        response = supabase.table('monthly_production_summary').select('display_month, total_produced_qty').order('month_key', desc=False).execute()
         data = response.data
 
-        # Initialize dictionary to store monthly production sums
-        monthly_production = {}
-
-        for record in data:
-            record_date_str = record.get('date')
-            produced_qty = record.get('produced_qty', 0)
-            
-            if record_date_str and isinstance(produced_qty, (int, float)):
-                # Parse date string to get year and month
-                try:
-                    record_date = datetime.strptime(record_date_str, '%Y-%m-%d')
-                    month_key = record_date.strftime('%Y-%m') # e.g., '2023-01'
-                    
-                    if month_key not in monthly_production:
-                        monthly_production[month_key] = 0
-                    monthly_production[month_key] += produced_qty
-                except ValueError:
-                    print(f"Skipping invalid date format: {record_date_str}")
-                    continue
-
-        # Sort the monthly data by month
-        sorted_months = sorted(monthly_production.keys())
-        months = [datetime.strptime(m, '%Y-%m').strftime('%b %Y') for m in sorted_months] # e.g., 'Jan 2023'
-        production_data = [monthly_production[m] for m in sorted_months]
+        # Extract data directly from the view's results
+        months = [record.get('display_month') for record in data]
+        production_data = [record.get('total_produced_qty') for record in data]
         
         return months, production_data
 
@@ -232,21 +211,13 @@ def get_monthly_production_data():
         return [], []
 
 def get_article_summary_data(year_month=None):
-    """Fetches and aggregates production data by product for a given month."""
+    """Fetches and aggregates production data by product for a given month from the article_production_summary view."""
     try:
-        query = supabase.table('tab_production').select('date, product, produced_qty, rejection')
+        query = supabase.table('article_production_summary').select('product, total_produced_qty, total_rejection_qty')
         
         if year_month:
-            # Filter by the start and end of the specified month
-            start_date = f'{year_month}-01'
-            # Calculate end date for the month
-            year, month = map(int, year_month.split('-'))
-            if month == 12:
-                end_date = f'{year + 1}-01-01'
-            else:
-                end_date = f'{year}-{month + 1:02d}-01'
-            
-            query = query.gte('date', start_date).lt('date', end_date)
+            # Filter by the selected month_key from the view
+            query = query.eq('month_key', year_month)
 
         response = query.execute()
         data = response.data
@@ -257,8 +228,8 @@ def get_article_summary_data(year_month=None):
         total_produced_qty_month = 0
         for record in data:
             product = record.get('product')
-            produced_qty = record.get('produced_qty', 0)
-            rejection_qty = record.get('rejection', 0)
+            produced_qty = record.get('total_produced_qty', 0) # Use total_produced_qty from view
+            rejection_qty = record.get('total_rejection_qty', 0) # Use total_rejection_qty from view
             
             if product:
                 # Ensure quantities are numeric, treat None as 0
@@ -267,19 +238,19 @@ def get_article_summary_data(year_month=None):
 
                 if product not in product_production:
                     product_production[product] = 0
-                    product_rejection[product] = 0 # Keep rejection for now, will remove later if not needed.
+                    product_rejection[product] = 0
                 product_production[product] += produced_qty
                 product_rejection[product] += rejection_qty
                 total_produced_qty_month += produced_qty
         
-        # Get unique sorted products (keys from either dict, ensuring consistency)
+        # Get unique sorted products
         all_products = sorted(list(set(product_production.keys()).union(set(product_rejection.keys()))))
 
         # Prepare data for sorting
         product_data_list = []
         for product in all_products:
             produced = product_production.get(product, 0)
-            rejected = product_rejection.get(product, 0) # Still keeping rejection_data for now, as it's returned
+            rejected = product_rejection.get(product, 0)
             
             percentage = 0
             if total_produced_qty_month > 0:
@@ -309,21 +280,21 @@ def get_article_summary_data(year_month=None):
 def get_available_production_months():
     """Fetches all unique YYYY-MM months from the tab_production table."""
     try:
-        response = supabase.table('tab_production').select('date').execute()
+        # Fetch months from the new article_production_summary view
+        response = supabase.table('article_production_summary').select('month_key').execute()
         data = response.data
+
+        print(f"Raw data from article_production_summary for months: {data}") # Added for debugging
 
         months = set()
         for record in data:
-            record_date_str = record.get('date')
-            if record_date_str:
-                try:
-                    record_date = datetime.strptime(record_date_str, '%Y-%m-%d')
-                    months.add(record_date.strftime('%Y-%m'))
-                except ValueError:
-                    continue
+            month_key = record.get('month_key')
+            if month_key:
+                months.add(month_key)
         
         # Sort months in descending order
         sorted_months = sorted(list(months), reverse=True)
+        print(f"Processed available months: {sorted_months}") # Added for debugging
         return sorted_months
 
     except Exception as e:
@@ -331,30 +302,15 @@ def get_available_production_months():
         return []
 
 def get_monthly_cutting_data():
-    """Fetches and aggregates monthly produced_qty from tab_cutting."""
+    """Fetches and aggregates monthly produced_qty from Supabase using the monthly_cutting_summary view."""
     try:
-        response = supabase.table('tab_cutting').select('date, produced_qty').execute()
+        # Query the monthly_cutting_summary view, which already provides aggregated and sorted data
+        response = supabase.table('monthly_cutting_summary').select('display_month, total_produced_qty').order('month_key', desc=False).execute()
         data = response.data
 
-        monthly_data = {}
-        for record in data:
-            record_date_str = record.get('date')
-            produced_qty = record.get('produced_qty', 0)
-            
-            if record_date_str and isinstance(produced_qty, (int, float)):
-                try:
-                    record_date = datetime.strptime(record_date_str, '%Y-%m-%d')
-                    month_key = record_date.strftime('%Y-%m')
-                    
-                    if month_key not in monthly_data:
-                        monthly_data[month_key] = 0
-                    monthly_data[month_key] += produced_qty
-                except ValueError:
-                    continue
-
-        sorted_months = sorted(monthly_data.keys())
-        months = [datetime.strptime(m, '%Y-%m').strftime('%b %Y') for m in sorted_months]
-        produced_quantities = [monthly_data[m] for m in sorted_months]
+        # Extract data directly from the view's results
+        months = [record.get('display_month') for record in data]
+        produced_quantities = [record.get('total_produced_qty') for record in data]
         
         return months, produced_quantities
 
@@ -365,18 +321,15 @@ def get_monthly_cutting_data():
 def get_available_cutting_months():
     """Fetches all unique YYYY-MM months from the tab_cutting table."""
     try:
-        response = supabase.table('tab_cutting').select('date').execute()
+        # Fetch months from the new article_cutting_summary view
+        response = supabase.table('article_cutting_summary').select('month_key').execute()
         data = response.data
 
         months = set()
         for record in data:
-            record_date_str = record.get('date')
-            if record_date_str:
-                try:
-                    record_date = datetime.strptime(record_date_str, '%Y-%m-%d')
-                    months.add(record_date.strftime('%Y-%m'))
-                except ValueError:
-                    continue
+            month_key = record.get('month_key')
+            if month_key:
+                months.add(month_key)
         
         sorted_months = sorted(list(months), reverse=True)
         return sorted_months
@@ -386,21 +339,12 @@ def get_available_cutting_months():
         return []
 
 def get_article_cutting_summary_data(year_month=None):
-    """Fetches and aggregates cutting data by product for a given month, including produced_qty and rejection."""
+    """Fetches and aggregates cutting data by product for a given month, including produced_qty and rejection from article_cutting_summary view."""
     try:
-        # Assuming 'product' and 'produced_qty' always exist. Checking for 'rejection' column.
-        # This query selects produced_qty and rejection. If rejection is not present, it will be None.
-        query = supabase.table('tab_cutting').select('product, produced_qty, rejection')
+        query = supabase.table('article_cutting_summary').select('product, total_produced_qty, total_rejection_qty')
         
         if year_month:
-            start_date = f'{year_month}-01'
-            year, month = map(int, year_month.split('-'))
-            if month == 12:
-                end_date = f'{year + 1}-01-01'
-            else:
-                end_date = f'{year}-{month + 1:02d}-01'
-            
-            query = query.gte('date', start_date).lt('date', end_date)
+            query = query.eq('month_key', year_month)
 
         response = query.execute()
         data = response.data
@@ -411,8 +355,8 @@ def get_article_cutting_summary_data(year_month=None):
         
         for record in data:
             product = record.get('product')
-            produced_qty = record.get('produced_qty', 0)
-            rejection_qty = record.get('rejection', 0) # Safely get rejection, defaults to 0 if not present
+            produced_qty = record.get('total_produced_qty', 0)
+            rejection_qty = record.get('total_rejection_qty', 0) # Use total_rejection_qty from view
             
             if product:
                 produced_qty = produced_qty if isinstance(produced_qty, (int, float)) else 0

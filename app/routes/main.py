@@ -44,6 +44,7 @@ def article_summary_report():
     
     # Get available months for the dropdown
     available_months = get_available_production_months()
+    print(f"Available months being sent to template: {available_months}")
 
     # Set a default month if none is selected and months are available
     if not selected_month and available_months:
