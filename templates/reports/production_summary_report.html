@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Production Summary Report{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-card {
+        margin-bottom: 1.5rem;
+    }
+    .card-title {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    .card-text {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    /* Custom styles for the cards */
+    .bg-today {
+        background-color: #0d6efd !important; /* Bootstrap Blue */
+        color: white !important;
+    }
+    .bg-yesterday {
+        background-color: #0dcaf0 !important; /* Bootstrap Cyan */
+        color: white !important;
+    }
+    .bg-this-week {
+        background-color: #6610f2 !important; /* Bootstrap Indigo */
+        color: white !important;
+    }
+    .bg-last-week {
+        background-color: #20c997 !important; /* Bootstrap Teal */
+        color: white !important;
+    }
+    .bg-this-month {
+        background-color: #fd7e14 !important; /* Bootstrap Orange */
+        color: white !important;
+    }
+    .bg-last-month {
+        background-color: #dc3545 !important; /* Bootstrap Red */
+        color: white !important;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Production Summary Report</h2>
+        <a href="{{ url_for('main.reports') }}" class="btn btn-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back to Reports
+        </a>
+    </div>
+
+    <!-- Summary Metrics Section -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-center report-card bg-today">
+                <div class="card-body">
+                    <h5 class="card-title">Today's Produced Qty</h5>
+                    <p class="card-text">{{ summary_metrics.today_total | default(0) | int }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center report-card bg-yesterday">
+                <div class="card-body">
+                    <h5 class="card-title">Yesterday's Produced Qty</h5>
+                    <p class="card-text">{{ summary_metrics.yesterday_total | default(0) | int }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center report-card bg-this-week">
+                <div class="card-body">
+                    <h5 class="card-title">This Week's Produced Qty</h5>
+                    <p class="card-text">{{ summary_metrics.this_week_total | default(0) | int }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-center report-card bg-last-week">
+                <div class="card-body">
+                    <h5 class="card-title">Last Week's Produced Qty</h5>
+                    <p class="card-text">{{ summary_metrics.last_week_total | default(0) | int }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center report-card bg-this-month">
+                <div class="card-body">
+                    <h5 class="card-title">This Month's Produced Qty</h5>
+                    <p class="card-text">{{ summary_metrics.this_month_total | default(0) | int }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center report-card bg-last-month">
+                <div class="card-body">
+                    <h5 class="card-title">Last Month's Produced Qty</h5>
+                    <p class="card-text">{{ summary_metrics.last_month_total | default(0) | int }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+{% endblock %} 

@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response
-from app.models.data_models import get_paginated_data, add_cutting_record, update_cutting_record, delete_cutting_records, supabase
+from app.models.data_models import get_paginated_data, add_cutting_record, update_cutting_record, delete_cutting_records, supabase, get_cutting_summary_metrics
 from datetime import datetime, date
 import logging
 import uuid
@@ -119,8 +119,12 @@ def cutting():
     print(f"Cutting page - Columns to fetch: {columns_to_fetch}")  # Debug log
     
     data = get_paginated_data(TABLES["cutting"], search, page, limit, columns=columns_to_fetch)
+
+    # Fetch summary metrics
+    summary_metrics = get_cutting_summary_metrics()
+    
     print(f"Cutting page - Headers: {data.get('headers')}")  # Debug log
-    return render_template("cutting.html", **data, column_view=column_view, today_date=date.today().isoformat())
+    return render_template("cutting.html", **data, column_view=column_view, today_date=date.today().isoformat(), summary_metrics=summary_metrics)
 
 @bp.route("/cutting-phase/details/test", methods=['GET'])
 def cutting_details_test():

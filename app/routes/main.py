@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request
 from flask_login import login_required, login_user, logout_user, current_user
 from app import User
-from app.models.data_models import get_monthly_production_data, get_available_production_months, get_article_summary_data, get_monthly_cutting_data, get_available_cutting_months, get_article_cutting_summary_data
+from app.models.data_models import get_monthly_production_data, get_available_production_months, get_article_summary_data, get_monthly_cutting_data, get_available_cutting_months, get_article_cutting_summary_data, get_cutting_summary_metrics, get_production_summary_metrics
 
 bp = Blueprint('main', __name__)
 
@@ -31,11 +31,23 @@ def monthly_production_report():
     
     return render_template('reports/monthly_production.html', months=months, production_data=production_data)
 
+@bp.route('/reports/production/summary')
+@login_required
+def production_summary_report():
+    summary_metrics = get_production_summary_metrics()
+    return render_template('reports/production_summary_report.html', summary_metrics=summary_metrics)
+
 @bp.route('/reports/cutting/monthly')
 @login_required
 def monthly_cutting_report():
     months, produced_quantities = get_monthly_cutting_data()
     return render_template('reports/monthly_cutting.html', months=months, production_data=produced_quantities)
+
+@bp.route('/reports/cutting/summary')
+@login_required
+def cutting_summary_report():
+    summary_metrics = get_cutting_summary_metrics()
+    return render_template('reports/cutting_summary_report.html', summary_metrics=summary_metrics)
 
 @bp.route('/reports/production/article_summary')
 @login_required

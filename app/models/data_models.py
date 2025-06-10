@@ -2,7 +2,7 @@ from supabase import create_client, Client
 import os
 import math
 from flask import request
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import uuid # Import uuid for ID generation
 
 # Supabase Configuration
@@ -404,4 +404,90 @@ def get_article_cutting_summary_data(year_month=None):
 
     except Exception as e:
         print(f"Error in get_article_cutting_summary_data: {e}")
-        return [], [], [], [], 0 
+        return [], [], [], [], 0
+
+def get_cutting_summary_metrics():
+    """Calculates and returns summary metrics (today, yesterday, last week, last month) for produced quantity from tab_cutting."""
+    # Fetch data directly from the cutting_matrix view
+    try:
+        response = supabase.table('cutting_matrix').select('today_qty, yesterday_qty, this_week_qty, last_week_qty, this_month_qty, last_month_qty').execute()
+        
+        if response.data:
+            # The view returns a single row with the aggregated data
+            metrics = response.data[0]
+            return {
+                "today_total": metrics.get('today_qty', 0),
+                "yesterday_total": metrics.get('yesterday_qty', 0),
+                "this_week_total": metrics.get('this_week_qty', 0),
+                "last_week_total": metrics.get('last_week_qty', 0),
+                "this_month_total": metrics.get('this_month_qty', 0),
+                "last_month_total": metrics.get('last_month_qty', 0)
+            }
+        else:
+            # If no data from view, return zeros
+            return {
+                "today_total": 0,
+                "yesterday_total": 0,
+                "this_week_total": 0,
+                "last_week_total": 0,
+                "this_month_total": 0,
+                "last_month_total": 0
+            }
+
+    except Exception as e:
+        print(f"Error in get_cutting_summary_metrics when querying view: {e}")
+        return {
+            "today_total": 0,
+            "yesterday_total": 0,
+            "this_week_total": 0,
+            "last_week_total": 0,
+            "this_month_total": 0,
+            "last_month_total": 0
+        }
+
+def get_production_summary_metrics():
+    """Calculates and returns summary metrics (today, yesterday, this week, last week, this month, last month) for produced quantity from production_matrix view."""
+    try:
+        response = supabase.table('production_matrix').select('today_qty, yesterday_qty, this_week_qty, last_week_qty, this_month_qty, last_month_qty').execute()
+        
+        if response.data:
+            metrics = response.data[0]
+            return {
+                "today_total": metrics.get('today_qty', 0),
+                "yesterday_total": metrics.get('yesterday_qty', 0),
+                "this_week_total": metrics.get('this_week_qty', 0),
+                "last_week_total": metrics.get('last_week_qty', 0),
+                "this_month_total": metrics.get('this_month_qty', 0),
+                "last_month_total": metrics.get('last_month_qty', 0)
+            }
+        else:
+            return {
+                "today_total": 0,
+                "yesterday_total": 0,
+                "this_week_total": 0,
+                "last_week_total": 0,
+                "this_month_total": 0,
+                "last_month_total": 0
+            }
+
+    except Exception as e:
+        print(f"Error in get_production_summary_metrics when querying view: {e}")
+        return {
+            "today_total": 0,
+            "yesterday_total": 0,
+            "this_week_total": 0,
+            "last_week_total": 0,
+            "this_month_total": 0,
+            "last_month_total": 0
+        }
+
+# Helper function to get limited columns for a table (excluding potentially large text fields)
+def get_limited_columns(table_name, columns: list[str] = None):
+    if columns:
+        select_query_string = ",".join(columns)
+        print(f"[DEBUG] Supabase select query string: {select_query_string}") # DEBUG
+        query = supabase.table(table_name).select(select_query_string)
+    else:
+        print("[DEBUG] Supabase select query string: *") # DEBUG
+        query = supabase.table(table_name).select("*")
+    return query 

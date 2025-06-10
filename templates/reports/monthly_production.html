@@ -20,9 +20,14 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2 class="mb-0">Monthly Production Report</h2>
-                <a href="{{ url_for('main.reports') }}" class="btn btn-secondary btn-sm">
-                    <i class="bi bi-arrow-left me-2"></i>Back to Reports
-                </a>
+                <div class="d-flex">
+                    <a href="{{ url_for('main.production_summary_report') }}" class="btn btn-info btn-sm me-2">
+                        <i class="bi bi-bar-chart-fill me-1"></i> Production Summary
+                    </a>
+                    <a href="{{ url_for('main.reports') }}" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Reports
+                    </a>
+                </div>
             </div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
