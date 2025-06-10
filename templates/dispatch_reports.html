@@ -342,11 +342,15 @@
                                                     {% set prev_month = monthly_data[loop.index0 - 1] %}
                                                     {% set current_total = month.karur + month.mumbai %}
                                                     {% set prev_total = prev_month.karur + prev_month.mumbai %}
-                                                    {% set trend = ((current_total - prev_total) / prev_total * 100)|round(1) %}
-                                                    {% if trend > 0 %}
-                                                        <span class="trend-up"><i class="bi bi-arrow-up"></i> {{ trend }}%</span>
+                                                    {% if prev_total == 0 %}
+                                                        -
                                                     {% else %}
-                                                        <span class="trend-down"><i class="bi bi-arrow-down"></i> {{ trend|abs }}%</span>
+                                                        {% set trend = ((current_total - prev_total) / prev_total * 100)|round(1) %}
+                                                        {% if trend > 0 %}
+                                                            <span class="trend-up"><i class="bi bi-arrow-up"></i> {{ trend }}%</span>
+                                                        {% else %}
+                                                            <span class="trend-down"><i class="bi bi-arrow-down"></i> {{ trend|abs }}%</span>
+                                                        {% endif %}
                                                     {% endif %}
                                                 {% else %}
                                                     -
@@ -392,6 +396,7 @@
                                             <th>Karur</th>
                                             <th>Mumbai</th>
                                             <th>Total</th>
+                                            <th>Trend</th>
                                         </tr>
                                     </thead>
                                     <tbody id="quarterlyTableBody">
@@ -401,6 +406,25 @@
                                             <td>{{ quarter.karur|number_format }}</td>
                                             <td>{{ quarter.mumbai|number_format }}</td>
                                             <td>{{ quarter.total|number_format }}</td>
+                                            <td>
+                                                {% if loop.index > 1 %}
+                                                    {% set prev_quarter = quarterly_data[loop.index0 - 1] %}
+                                                    {% set current_total = quarter.total %}
+                                                    {% set prev_total = prev_quarter.total %}
+                                                    {% if prev_total == 0 %}
+                                                        -
+                                                    {% else %}
+                                                        {% set trend = ((current_total - prev_total) / prev_total * 100)|round(1) %}
+                                                        {% if trend > 0 %}
+                                                            <span class="trend-up"><i class="bi bi-arrow-up"></i> {{ trend }}%</span>
+                                                        {% else %}
+                                                            <span class="trend-down"><i class="bi bi-arrow-down"></i> {{ trend|abs }}%</span>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
@@ -888,13 +912,15 @@ function updateTables(data) {
     const quarterlyTable = document.getElementById('quarterlyTableBody');
     if (quarterlyTable) {
         quarterlyTable.innerHTML = '';
-        data.quarterly_data.forEach(quarter => {
+        data.quarterly_data.forEach((quarter, index) => {
             const row = document.createElement('tr');
+            const trendHtml = index > 0 ? calculateTrend(data.quarterly_data[index - 1], quarter) : '-';
             row.innerHTML = `
                 <td>${quarter.quarter}</td>
                 <td>${new Intl.NumberFormat().format(quarter.karur)}</td>
                 <td>${new Intl.NumberFormat().format(quarter.mumbai)}</td>
                 <td>${new Intl.NumberFormat().format(quarter.total)}</td>
+                <td>${trendHtml}</td>
             `;
             quarterlyTable.appendChild(row);
         });
@@ -983,9 +1009,21 @@ function updateTables(data) {
 }
 
 // Calculate trend percentage
-function calculateTrend(prevMonth, currentMonth) {
-    const prevTotal = prevMonth.karur + prevMonth.mumbai;
-    const currentTotal = currentMonth.karur + currentMonth.mumbai;
+function calculateTrend(prevData, currentData) {
+    let prevTotal;
+    let currentTotal;
+
+    if (prevData.total !== undefined && currentData.total !== undefined) {
+        // For quarterly data
+        prevTotal = prevData.total;
+        currentTotal = currentData.total;
+    } else if (prevData.karur !== undefined && prevData.mumbai !== undefined) {
+        // For monthly data
+        prevTotal = prevData.karur + prevData.mumbai;
+        currentTotal = currentData.karur + currentData.mumbai;
+    } else {
+        return '-'; // Cannot calculate trend
+    }
     
     if (prevTotal === 0) return '-'; // Avoid division by zero
 
