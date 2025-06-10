@@ -444,18 +444,23 @@ body.sb-sidenav-toggled #page-content-wrapper {
 }
 
 .table thead th {
-    background-color: #3f51b5; /* A slightly warmer dark blue for headers (Material Design inspired) */
-    color: #ffffff;
-    border: none;
-    padding: 1.2rem 1.8rem; /* Even more padding for table headers */
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    text-align: left;
     vertical-align: middle;
-    text-transform: uppercase;
-    font-size: 0.95rem; /* Slightly larger font for headers */
-    letter-spacing: 0.7px; /* Slightly more letter spacing */
+    border-bottom: 2px solid #dee2e6;
+    padding: 0.75rem;
+    text-transform: none; /* Ensure no uppercase transformation */
+}
+
+.table thead {
+    vertical-align: bottom;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table thead th {
+    padding: 0.75rem;
+    vertical-align: bottom;
+    border-bottom: 2px solid #dee2e6;
+    text-transform: none; /* Ensure no uppercase transformation */
 }
 
 .table tbody tr:nth-of-type(odd) {
@@ -754,7 +759,7 @@ h2 {
     font-weight: 600;
     color: #495057;
     border-bottom: 1px solid #dee2e6; /* Light border below header */
-    text-transform: uppercase; /* Uppercase header text */
+    text-transform: none; /* Removed uppercase transformation */
     font-size: 0.85rem;
 }
 
@@ -767,9 +772,15 @@ h2 {
 }
 
 .table tbody td {
-    padding: 0.75rem 1.25rem; /* Consistent padding for body cells */
-    border-top: 1px solid #e9ecef; /* Lighter border between rows */
-    color: #495057;
+    padding: 0.75rem;
+    vertical-align: top;
+    border-top: 1px solid #dee2e6;
+}
+
+/* Custom style to reduce table row height for .table-sm */
+.table-sm td, .table-sm th {
+    padding-top: 0.3rem !important;
+    padding-bottom: 0.3rem !important;
 }
 
 /* Form Control Styles */

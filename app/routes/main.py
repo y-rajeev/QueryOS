@@ -68,13 +68,14 @@ def article_summary_report():
 def article_cutting_summary_report():
     selected_month = request.args.get('month')
     available_months = get_available_cutting_months()
+    print(f"Available cutting months being sent to template: {available_months}")
 
     if not selected_month and available_months:
         selected_month = available_months[0]
 
-    labels, quantities, rejection_data, production_percentage_data, total_produced_qty = [], [], [], [], 0
+    labels, quantities, rejection_data, production_percentage_data, total_produced_qty, total_rejection_qty = [], [], [], [], 0, 0
     if selected_month:
-        labels, quantities, rejection_data, production_percentage_data, total_produced_qty = get_article_cutting_summary_data(selected_month)
+        labels, quantities, rejection_data, production_percentage_data, total_produced_qty, total_rejection_qty = get_article_cutting_summary_data(selected_month)
 
     return render_template('reports/article_summary_cutting.html',
                            labels=labels,
@@ -82,5 +83,6 @@ def article_cutting_summary_report():
                            rejection_data=rejection_data,
                            production_percentage_data=production_percentage_data,
                            total_produced_qty=total_produced_qty,
+                           total_rejection_qty=total_rejection_qty,
                            available_months=available_months,
                            selected_month=selected_month) 

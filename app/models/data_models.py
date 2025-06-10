@@ -325,6 +325,8 @@ def get_available_cutting_months():
         response = supabase.table('article_cutting_summary').select('month_key').execute()
         data = response.data
 
+        print(f"Raw data from article_cutting_summary for available months: {data}") # Added for debugging
+
         months = set()
         for record in data:
             month_key = record.get('month_key')
@@ -332,6 +334,7 @@ def get_available_cutting_months():
                 months.add(month_key)
         
         sorted_months = sorted(list(months), reverse=True)
+        print(f"Processed available cutting months: {sorted_months}") # Added for debugging
         return sorted_months
 
     except Exception as e:
@@ -394,7 +397,10 @@ def get_article_cutting_summary_data(year_month=None):
         rejection_data = [item['rejection_qty'] for item in product_data_list]
         production_percentage_data = [f"{item['percentage']:.2f}%" for item in product_data_list]
 
-        return labels, quantities, rejection_data, production_percentage_data, total_produced_qty_month
+        # Calculate total rejection quantity for the month
+        total_rejection_qty_month = sum(rejection_data)
+
+        return labels, quantities, rejection_data, production_percentage_data, total_produced_qty_month, total_rejection_qty_month
 
     except Exception as e:
         print(f"Error in get_article_cutting_summary_data: {e}")

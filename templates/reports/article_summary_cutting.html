@@ -9,6 +9,19 @@
         height: 500px;
         width: 100%;
     }
+
+    /* Custom styles for Article Summary Cutting Report table header */
+    .article-cutting-summary-table thead th {
+        background-color: #3452eb; /* Custom dark blue */
+        color: white; /* White text color */
+        font-weight: bold; /* Bold text */
+        text-transform: none !important; /* Force override uppercase transformation */
+    }
+
+    .article-cutting-summary-table th:nth-child(n+2),
+    .article-cutting-summary-table td:nth-child(n+2) {
+        text-align: right;
+    }
 </style>
 {% endblock %}
 
@@ -70,12 +83,12 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover">
+                        <table class="table table-striped table-hover article-cutting-summary-table">
                             <thead>
-                                <tr class="table-primary">
+                                <tr>
                                     <th>Product</th>
                                     <th>Produced Quantity</th>
-                                    <th>Rejection Quantity</th>
+                                    <th>Rejected Quantity</th>
                                     <th>Percentage</th>
                                 </tr>
                             </thead>
@@ -88,12 +101,12 @@
                                     <td>{{ production_percentage_data[i] }}</td>
                                 </tr>
                                 {% endfor %}
-                                {% if total_produced_qty > 0 %}
+                                {% if total_produced_qty > 0 or total_rejection_qty > 0 %}
                                 <tr class="table-secondary fw-bold">
                                     <td>Total</td>
                                     <td>{{ total_produced_qty }}</td>
-                                    <td></td> {# Empty cell for percentage total #}
-                                    <td>100.00%</td> {# Total percentage always 100% #}
+                                    <td>{{ total_rejection_qty }}</td>
+                                    <td>100.00%</td>
                                 </tr>
                                 {% endif %}
                             </tbody>
