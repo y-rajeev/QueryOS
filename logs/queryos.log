@@ -1,0 +1,63 @@
+2025-06-12 11:01:01,268 - werkzeug - INFO -  * Restarting with stat
+2025-06-12 11:01:02,767 - root - INFO - QueryOS application initialized
+2025-06-12 11:01:02,835 - werkzeug - WARNING -  * Debugger is active!
+2025-06-12 11:01:02,848 - werkzeug - INFO -  * Debugger PIN: 348-861-975
+2025-06-12 11:01:06,500 - werkzeug - INFO - 127.0.0.1 - - [12/Jun/2025 11:01:06] "GET / HTTP/1.1" 200 -
+2025-06-12 11:01:06,701 - werkzeug - INFO - 127.0.0.1 - - [12/Jun/2025 11:01:06] "GET /static/style.css HTTP/1.1" 200 -
+2025-06-12 11:01:06,771 - werkzeug - INFO - 127.0.0.1 - - [12/Jun/2025 11:01:06] "GET /static/js/app_utils.js HTTP/1.1" 200 -
+2025-06-12 11:01:06,917 - werkzeug - INFO - 127.0.0.1 - - [12/Jun/2025 11:01:06] "[35m[1mGET /favicon.ico HTTP/1.1[0m" 500 -
+2025-06-12 11:01:09,684 - werkzeug - INFO - 127.0.0.1 - - [12/Jun/2025 11:01:09] "GET / HTTP/1.1" 200 -
+2025-06-12 11:01:09,770 - werkzeug - INFO - 127.0.0.1 - - [12/Jun/2025 11:01:09] "GET /static/style.css HTTP/1.1" 200 -
+2025-06-12 11:01:09,806 - werkzeug - INFO - 127.0.0.1 - - [12/Jun/2025 11:01:09] "GET /static/js/app_utils.js HTTP/1.1" 200 -
+2025-06-12 11:01:09,993 - werkzeug - INFO - 127.0.0.1 - - [12/Jun/2025 11:01:09] "[35m[1mGET /favicon.ico HTTP/1.1[0m" 500 -
+2025-06-12 11:01:14,450 - httpcore.connection - DEBUG - connect_tcp.started host='ksfosolftrgtomufktva.supabase.co' port=443 local_address=None timeout=120 socket_options=None
+2025-06-12 11:01:14,529 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000001E40A6BABA0>
+2025-06-12 11:01:14,530 - httpcore.connection - DEBUG - start_tls.started ssl_context=<ssl.SSLContext object at 0x000001E40A59DAC0> server_hostname='ksfosolftrgtomufktva.supabase.co' timeout=120
+2025-06-12 11:01:14,560 - httpcore.connection - DEBUG - start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000001E40A7AD310>
+2025-06-12 11:01:14,565 - httpcore.http2 - DEBUG - send_connection_init.started request=<Request [b'GET']>
+2025-06-12 11:01:14,566 - httpcore.http2 - DEBUG - send_connection_init.complete
+2025-06-12 11:01:14,567 - httpcore.http2 - DEBUG - send_request_headers.started request=<Request [b'GET']> stream_id=1
+2025-06-12 11:01:14,568 - hpack.hpack - DEBUG - Adding (b':method', b'GET') to the header table, sensitive:False, huffman:True
+2025-06-12 11:01:14,569 - hpack.hpack - DEBUG - Encoding 2 with 7 bits
+2025-06-12 11:01:14,569 - hpack.hpack - DEBUG - Adding (b':authority', b'ksfosolftrgtomufktva.supabase.co') to the header table, sensitive:False, huffman:True
+2025-06-12 11:01:14,570 - hpack.hpack - DEBUG - Encoding 1 with 6 bits
+2025-06-12 11:01:14,571 - hpack.hpack - DEBUG - Encoding 23 with 7 bits
+2025-06-12 11:01:14,571 - hpack.hpack - DEBUG - Adding (b':scheme', b'https') to the header table, sensitive:False, huffman:True
+2025-06-12 11:01:14,572 - hpack.hpack - DEBUG - Encoding 7 with 7 bits
+2025-06-12 11:01:14,573 - hpack.hpack - DEBUG - Adding (b':path', b'/rest/v1/tab_sales_order?select=%2A') to the header table, sensitive:False, huffman:True
+2025-06-12 11:01:14,574 - hpack.hpack - DEBUG - Encoding 4 with 6 bits
+2025-06-12 11:01:14,575 - hpack.hpack - DEBUG - Encoding 25 with 7 bits
+2025-06-12 11:01:14,576 - hpack.hpack - DEBUG - Adding (b'accept', b'*/*') to the header table, sensitive:False, huffman:True
+2025-06-12 11:01:14,578 - hpack.hpack - DEBUG - Encoding 19 with 6 bits
+2025-06-12 11:01:14,583 - hpack.hpack - DEBUG - Encoding 3 with 7 bits
+2025-06-12 11:01:14,587 - hpack.hpack - DEBUG - Adding (b'accept-encoding', b'gzip, deflate') to the header table, sensitive:False, huffman:True
+2025-06-12 11:01:14,587 - hpack.hpack - DEBUG - Encoding 16 with 7 bits
+2025-06-12 11:01:14,589 - hpack.hpack - DEBUG - Adding (b'user-agent', b'python-httpx/0.28.1') to the header table, sensitive:False, huffman:True
+2025-06-12 11:01:14,590 - hpack.hpack - DEBUG - Encoding 58 with 6 bits
+2025-06-12 11:01:14,591 - hpack.hpack - DEBUG - Encoding 14 with 7 bits
+2025-06-12 11:01:14,592 - hpack.hpack - DEBUG - Adding (b'x-client-info', b'supabase-py/2.15.2') to the header table, sensitive:False, huffman:True
+2025-06-12 11:01:14,595 - hpack.hpack - DEBUG - Encoding 10 with 7 bits
+2025-06-12 11:01:14,597 - hpack.hpack - DEBUG - Encoding 13 with 7 bits
+2025-06-12 11:01:14,598 - hpack.hpack - DEBUG - Adding (b'apikey', b'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm9zb2xmdHJndG9tdWZrdHZhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MTM2MDgwMiwiZXhwIjoyMDU2OTM2ODAyfQ.3aKr7KcfSqJiLCY9KP0nKAsD8s-0TtillX38vPcaWDM') to the header table, sensitive:False, huffman:True
+2025-06-12 11:01:14,599 - hpack.hpack - DEBUG - Encoding 5 with 7 bits
+2025-06-12 11:01:14,599 - hpack.hpack - DEBUG - Encoding 175 with 7 bits
+2025-06-12 11:01:14,600 - hpack.hpack - DEBUG - Adding (b'authorization', b'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm9zb2xmdHJndG9tdWZrdHZhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MTM2MDgwMiwiZXhwIjoyMDU2OTM2ODAyfQ.3aKr7KcfSqJiLCY9KP0nKAsD8s-0TtillX38vPcaWDM') to the header table, sensitive:True, huffman:True
+2025-06-12 11:01:14,600 - hpack.hpack - DEBUG - Encoding 23 with 4 bits
+2025-06-12 11:01:14,601 - hpack.hpack - DEBUG - Encoding 180 with 7 bits
+2025-06-12 11:01:14,603 - hpack.hpack - DEBUG - Adding (b'accept-profile', b'public') to the header table, sensitive:False, huffman:True
+2025-06-12 11:01:14,604 - hpack.hpack - DEBUG - Encoding 10 with 7 bits
+2025-06-12 11:01:14,606 - hpack.hpack - DEBUG - Encoding 5 with 7 bits
+2025-06-12 11:01:14,606 - hpack.hpack - DEBUG - Adding (b'content-profile', b'public') to the header table, sensitive:False, huffman:True
+2025-06-12 11:01:14,608 - hpack.hpack - DEBUG - Encoding 11 with 7 bits
+2025-06-12 11:01:14,610 - hpack.hpack - DEBUG - Encoding 5 with 7 bits
+2025-06-12 11:01:14,611 - hpack.hpack - DEBUG - Adding (b'prefer', b'count=exact') to the header table, sensitive:False, huffman:True
+2025-06-12 11:01:14,614 - hpack.hpack - DEBUG - Encoding 5 with 7 bits
+2025-06-12 11:01:14,615 - hpack.hpack - DEBUG - Encoding 8 with 7 bits
+2025-06-12 11:01:14,616 - hpack.hpack - DEBUG - Encoded header block to b"\x82A\x97\xea\x89N\x83\xd1*l\x99'\xa6\xd9z\xa7\xb8\xd7E\xb5\x8e1\xa0\xab\x90\xff\x87D\x99b\xc2\xa1,w\x0b\t\x1cq t\x15\x11\x1e\xc9\x0bg\xf8\x82\xd0R&\x05E\x0fS\x83\xf9c\xe7\x90z\x8e\xaf\xd2g=KN\x94\xd7\xe5\x80.'\x97\x0f@\x8a\xf2\xb1(1jJ\xc6\xaaS\xff\x8dE\xb5\x8e1\xa0\xabW\xe9\x81.\x16\xd7\x17@\x85\x1df\xea__\xff0/\xac\xb3\xc7\x88\x86\xd4l\xb98{\xc8\x1d&\xc8\x8c\x95ml\x97\xb29\x93\xad\x7f\x9coe}r\xfa\xcbY\x19\xd0mF\xcb\xeeO\xcb\xb3\xf3\xa7\x0f\xbf\xdd\xd9\x11\x92\xac\xb4~\x9b#\x99)O\xbf\xda_\xf7\x18\xbc\xd3&<\xb5I\x89\xf4\xc9\xcb\xf6\xc91\xfe\xcf\x90\xde\x0cJ_G\xee\xec\x8ed\xabM\x04\xab\xf6\xbeb\xe3))}\x1f\xbb\xb2#%4O%\xec\x8eh\xde@h\xdf\xa0Z/\xcd\xe3A\xbc\x1b\xf7\xf2\x7f\x19:\x1f\xd6\x8b\xfc\x05\xab~\x81j\xbf\x0f\xa9v.\xc8\xf3X\xeebK\xbb\xb6Sg\xbd\xcd\xfc\xda\xc1VhQ}\xe4,\r\xe95\x14~2\xf7}d\x1f+\xfa?\x1f\x08\xff5\xbaQ\xd8[\x14/\xac\xb3\xc7\x88\x86\xd4l\xb98{\xc8\x1d&\xc8\x8c\x95ml\x97\xb29\x93\xad\x7f\x9coe}r\xfa\xcbY\x19\xd0mF\xcb\xeeO\xcb\xb3\xf3\xa7\x0f\xbf\xdd\xd9\x11\x92\xac\xb4~\x9b#\x99)O\xbf\xda_\xf7\x18\xbc\xd3&<\xb5I\x89\xf4\xc9\xcb\xf6\xc91\xfe\xcf\x90\xde\x0cJ_G\xee\xec\x8ed\xabM\x04\xab\xf6\xbeb\xe3))}\x1f\xbb\xb2#%4O%\xec\x8eh\xde@h\xdf\xa0Z/\xcd\xe3A\xbc\x1b\xf7\xf2\x7f\x19:\x1f\xd6\x8b\xfc\x05\xab~\x81j\xbf\x0f\xa9v.\xc8\xf3X\xeebK\xbb\xb6Sg\xbd\xcd\xfc\xda\xc1VhQ}\xe4,\r\xe95\x14~2\xf7}d\x1f+\xfa?@\x8a\x19\x08Z\xd2\xb5v\x1eSP_\x85\xae\xd8\xe81?@\x8b!\xeaIjJ\xd5\xd8yMA\x7f\x85\xae\xd8\xe81?@\x85\xae\xc2\xca[?\x88!\xed\xa90\x17\xc8\xc8\x9f"
+2025-06-12 11:01:14,618 - httpcore.http2 - DEBUG - send_request_headers.complete
+2025-06-12 11:01:14,618 - httpcore.http2 - DEBUG - send_request_body.started request=<Request [b'GET']> stream_id=1
+2025-06-12 11:01:14,619 - httpcore.http2 - DEBUG - send_request_body.complete
+2025-06-12 11:01:14,620 - httpcore.http2 - DEBUG - receive_response_headers.started request=<Request [b'GET']> stream_id=1
+2025-06-12 11:01:14,621 - httpcore.http2 - DEBUG - receive_remote_settings.started
+2025-06-12 11:01:14,624 - httpcore.http2 - DEBUG - receive_remote_settings.complete return_value=<RemoteSettingsChanged changed_settings:{ChangedSetting(setting=3, original_value=None, new_value=100), ChangedSetting(setting=4, original_value=65535, new_value=65536), ChangedSetting(setting=5, original_value=16384, new_value=16777215)}>
+2025-06-12 11:01:14,976 - hpack.hpack - DEBUG - Decoding b'?\xe1\x1f\x88a\x96\xdf=\xbfJ\x04Je\xb6\xa5\x04\x016\xa0\x1b\xb8\xc8n\x05\xb51h\xdf_\x96\x1du\xd0b\r&=LtA\xea\xfbP\x93\x8e\xc4\x150Z\x99V{^\x84\x02\xc1`_@\x85$\xabX?_\x8f}\xa2\xb9+r\xc8!\xb6\xfbN\xca\x05\xae\xea\xd1@\x8a$\xab\x10d\x9c\xab!#M\xa8\x86\xbf\xcfL:2^Z\x83\x9b\xd9\xab]\x93a#\x8e$\x0e\x82\xa2#\xd9!l\xff\x10Z\nD\xc0\xa8\xa1x\xa0\xa4~V\x1c\xc5\x81\x90\xb6\xcb\x80\x00>\xd45D\xa2\xd9\x0b\xba\xd8\xef\x9e\x91\x9a\xa4}\xa9]\x85\xa0\xe3\x93{\x8b\x84\x84-i[\x05D<\x86\xaao@\x8b!\xeaIjJ\xd5\xd8yMA\x7f\x85\xae\xd8\xe81?@\x8d\xae\xc2\xca[\x0bQ\n\xb0\xeb\xae\x83\x16O\x88!\xed\xa90\x17\xc8\xc8\x9f@\x8dDkL4\x97\xc0\xfd-\xdc\xb6 \xc7\xab\x011@\x8aDkWa\xfa\x14\x89Z\xc2\xcb\x8f\xea\x89N\x83\xd1*l\x99\'\xa6\xd9z\xa7\xb8\xff@\x90\xf2\xb1\x0fRKRVO\xaa\xca\xb1\xebI\x8fR?\x85\xa8\xe8\xa8\xd2\xcb@\x8f\xf2\xb1j\xee\x7fK\r)-5\xa5b\x1e\xda\x93\x011@\x95\xf2\xb1j\xee\x7fK[Z\x13aGJ\xc8-\x9d\xccB\xac\x93R_\x0218w\xffW\x8a"K\x14t\xc1~-\xfduC\xebV\xb8\xbdh\xc7\xbf|\xff\x99h\x99\xc8x~P%\xd7\xc1\xe2\x8e\x18\xb0\xd1\xa1\xafr\x9b\xaf\r\x8b\x05\xd6\x9ft\x0e\t\xd6\xd6\n\xe0\\+\x85g\xe4\xd9\xfb\xc5\xbb\xf8\xe6\xf4\xcf\x8a\xbdpn\xee\r|r\x1f\x0e\x0b\xb8\xcf\xd5\xcd\x18A\xafyB\xf1\xefw\xfd\xfd\xe3\xee\xcai\xdeO\x1e\xd7+\xbc7dD\x9c\x01\xe64q\xc1\xbbO\xaa\x07\xf9c\xc2\xb3\xc7\x12\x8fF\x84\xeb\xaa\xb1?^v\xeb\x07\x94e\x06\xa6\xacq\xc7C\xdbNO\xb5+\x1ag\x81\x8f\xb5\x0b\xe6\xb3XTA\xbe{~\x94\x08\x96\xcbmK\t\xb5\x00\xe5\xc0\x06\xe0[S\x16\x8d\xffjHzFj\xa0]\x16\xd68\xc6\x82\xaeC\xfd\xa9\x8d)\xafUTz\xfbSqIm\x85\xfbSp\xe9.\xe3$\xb0i=Ev\x87%\x07\xb6Ih\x1d\x85@\x85\x1d\tY\x1d\xc9\x90\x9d\x98?\x9b\x8d4\xcf\xf3\xf6\xa5#\x81\xe7\x1a\x00?'

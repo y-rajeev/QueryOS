@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Sales Order Details</h2>
+        <div>
+            <a href="{{ url_for('sales_order.edit_order', po_no=order.po_no) }}" class="btn btn-warning me-2">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <a href="{{ url_for('sales_order.list_orders') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- Order Details -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Order Information</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <p class="mb-1"><strong>PO No:</strong></p>
+                    <p>{{ order.po_no }}</p>
+                </div>
+                <div class="col-md-3">
+                    <p class="mb-1"><strong>PO Date:</strong></p>
+                    <p>{{ order.po_date }}</p>
+                </div>
+                <div class="col-md-3">
+                    <p class="mb-1"><strong>Delivery Date:</strong></p>
+                    <p>{{ order.delivery_date }}</p>
+                </div>
+                <div class="col-md-3">
+                    <p class="mb-1"><strong>Status:</strong></p>
+                    <p>
+                        <span class="badge bg-{{ 'success' if order.status == 'Closed' else 'warning' if order.status == 'In-Prod' else 'secondary' }}">
+                            {{ order.status }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <p class="mb-1"><strong>Branch:</strong></p>
+                    <p>{{ order.branch }}</p>
+                </div>
+                <div class="col-md-3">
+                    <p class="mb-1"><strong>Warehouse:</strong></p>
+                    <p>{{ order.warehouse }}</p>
+                </div>
+                <div class="col-md-3">
+                    <p class="mb-1"><strong>Repository:</strong></p>
+                    <p>{{ order.repository }}</p>
+                </div>
+                <div class="col-md-3">
+                    <p class="mb-1"><strong>Total Quantity:</strong></p>
+                    <p>{{ order.total_qty|number_format }}</p>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <p class="mb-1"><strong>Country:</strong></p>
+                    <p>{{ order.country }}</p>
+                </div>
+                <div class="col-md-3">
+                    <p class="mb-1"><strong>Mode:</strong></p>
+                    <p>{{ order.mode }}</p>
+                </div>
+                <div class="col-md-3">
+                    <p class="mb-1"><strong>Created At:</strong></p>
+                    <p>{{ order.created_at }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Items -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Order Items</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Sr No</th>
+                            <th>SKU</th>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Line</th>
+                            <th>Design</th>
+                            <th>Size</th>
+                            <th>Pack Of</th>
+                            <th>Sets</th>
+                            <th>Pieces</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>{{ item.sr_no }}</td>
+                            <td>{{ item.sku }}</td>
+                            <td>{{ item.product }}</td>
+                            <td>{{ item.category }}</td>
+                            <td>{{ item.line }}</td>
+                            <td>{{ item.design }}</td>
+                            <td>{{ item.size }}</td>
+                            <td>{{ item.pack_of }}</td>
+                            <td>{{ item.sets }}</td>
+                            <td>{{ item.pieces }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

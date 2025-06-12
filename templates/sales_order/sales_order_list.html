@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Sales Orders</h2>
+        <a href="{{ url_for('sales_order.create_order') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Sales Order
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label for="po_no" class="form-label">PO No</label>
+                    <input type="text" class="form-control" id="po_no" name="po_no" value="{{ po_no }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">All</option>
+                        {% for status in statuses %}
+                        <option value="{{ status }}" {% if status == status %}selected{% endif %}>{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="branch" class="form-label">Branch</label>
+                    <select class="form-select" id="branch" name="branch">
+                        <option value="">All</option>
+                        {% for branch in branches %}
+                        <option value="{{ branch }}" {% if branch == branch %}selected{% endif %}>{{ branch }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">Filter</button>
+                    <a href="{{ url_for('sales_order.list_orders') }}" class="btn btn-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>PO No</th>
+                            <th>PO Date</th>
+                            <th>Delivery Date</th>
+                            <th>Total Qty</th>
+                            <th>Branch</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td>{{ order.po_no }}</td>
+                            <td>{{ order.po_date }}</td>
+                            <td>{{ order.delivery_date }}</td>
+                            <td>{{ order.total_qty|number_format }}</td>
+                            <td>{{ order.branch }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if order.status == 'Closed' else 'warning' if order.status == 'In-Prod' else 'secondary' }}">
+                                    {{ order.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('sales_order.view_order', po_no=order.po_no) }}" 
+                                       class="btn btn-sm btn-info" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('sales_order.edit_order', po_no=order.po_no) }}" 
+                                       class="btn btn-sm btn-warning" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-danger" 
+                                            onclick="confirmDelete('{{ order.po_no }}')" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if total_count > per_page %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% set total_pages = (total_count + per_page - 1) // per_page %}
+                    {% set start_page = max(1, page - 2) %}
+                    {% set end_page = min(total_pages, start_page + 4) %}
+                    
+                    {% if page > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('sales_order.list_orders', page=page-1, po_no=po_no, status=status, branch=branch) }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for p in range(start_page, end_page + 1) %}
+                    <li class="page-item {% if p == page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('sales_order.list_orders', page=p, po_no=po_no, status=status, branch=branch) }}">{{ p }}</a>
+                    </li>
+                    {% endfor %}
+                    
+                    {% if page < total_pages %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('sales_order.list_orders', page=page+1, po_no=po_no, status=status, branch=branch) }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this sales order?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function confirmDelete(poNo) {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const form = document.getElementById('deleteForm');
+    const baseUrl = "{{ url_for('sales_order.delete_order', po_no='placeholder') }}";
+    form.action = baseUrl.replace('placeholder', poNo);
+    modal.show();
+}
+</script>
+{% endblock %} 

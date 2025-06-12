@@ -1,25 +1,17 @@
     {% extends "base.html" %}
 
-{% block title %}Shipment Data{% endblock %}
+{% block title %}Pending Orders{% endblock %}
 
 {% block content %}
     <!-- Page Header Section -->
-    <div class="mb-3"> {# Overall spacing below header #}
+    <div class="mb-3">
         <div class="d-flex justify-content-between align-items-center mb-2">
             <div class="d-flex align-items-center mb-2">
-                <h2 class="me-3">Dispatch Data</h2>
+                <h2 class="me-3">Pending Orders</h2>
+                <span class="badge bg-primary">{{ total_records }} Orders</span>
             </div>
             <div class="d-flex page-header-actions">
-                <div class="dropdown">
-                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="listViewDropdownDispatch" data-bs-toggle="dropdown" aria-expanded="false" title="List View">
-                        <i class="bi bi-list me-2"></i> List View
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="listViewDropdownDispatch">
-                        <li><a class="dropdown-item" href="#" data-column-view="limited">Limited Columns</a></li>
-                        <li><a class="dropdown-item" href="#" data-column-view="all">All Columns</a></li>
-                    </ul>
-                </div>
-                <button class="btn btn-secondary btn-sm" title="Refresh Data" onclick="window.location.reload(); showLoading();">
+                <button class="btn btn-secondary btn-sm" title="Refresh Data" onclick="window.location.reload();">
                     <i class="bi bi-arrow-clockwise"></i>
                 </button>
             </div>
@@ -28,103 +20,181 @@
 
     <!-- Search and Filter Section -->
     <div class="row mb-3">
-        <div class="col-md-6">
-            <form method="GET" class="d-flex">
-                <input type="text" name="search" class="form-control me-2" placeholder="Search..." value="{{ search }}">
-                <button type="submit" class="btn btn-primary">Search</button>
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <form id="filterForm" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" class="form-control" id="search" name="search" placeholder="Search...">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="channel" class="form-label">Channel</label>
+                            <input type="text" class="form-control" id="channel" name="channel" placeholder="Channel">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="from_date" class="form-label">From Date</label>
+                            <input type="date" class="form-control" id="from_date" name="from_date">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="to_date" class="form-label">To Date</label>
+                            <input type="date" class="form-control" id="to_date" name="to_date">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">Filter</button>
+                            <button type="reset" class="btn btn-secondary">Clear</button>
+                        </div>
             </form>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Data Table Section -->
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    {% for header in headers %}
-                    <th>{{ header }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in rows %}
-                <tr>
-                    {% for header in headers %}
-                    <td>{{ row[header] }}</td>
-                    {% endfor %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive table-sm">
+                {% if orders %}
+                    <table class="table table-hover table-striped table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                {% for header in headers %}
+                                <th class="text-nowrap">{{ header|replace('_', ' ')|title }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr>
+                                {% for header in headers %}
+                                <td class="text-nowrap">
+                                    {% if header == 'status' %}
+                                        <span class="badge {% if order[header] == 'In-Prod' %}bg-warning{% else %}bg-success{% endif %}">
+                                            {{ order[header] }}
+                                        </span>
+                                    {% elif header in ['po_qty', 'dispatched_qty', 'pending_qty'] %}
+                                        <span class="{% if header == 'pending_qty' and order[header] > 0 %}text-danger{% endif %}">
+                                            {{ order[header] }}
+                                        </span>
+                                    {% else %}
+                                        {{ order[header] }}
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="alert alert-info mb-0">
+                        No pending orders found.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
-
-    <!-- Pagination Section -->
-    {% if total_pages > 1 %}
-    <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center">
-            {% if current_page > 1 %}
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('data.production_data', page=current_page-1, search=search, column_view=column_view) }}">Previous</a>
-            </li>
-            {% endif %}
-            
-            {% for page in range(1, total_pages + 1) %}
-            <li class="page-item {% if page == current_page %}active{% endif %}">
-                <a class="page-link" href="{{ url_for('data.production_data', page=page, search=search, column_view=column_view) }}">{{ page }}</a>
-            </li>
-            {% endfor %}
-            
-            {% if current_page < total_pages %}
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('data.production_data', page=current_page+1, search=search, column_view=column_view) }}">Next</a>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
-    {% endif %}
 {% endblock %}
 
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const deleteSelectedBtnDispatch = document.getElementById('deleteSelectedBtnDispatch');
-        const confirmBulkDeleteBtnDispatch = document.getElementById('confirmBulkDeleteBtnDispatch'); // Assuming you have a confirmation modal for this page too
-        const table = document.querySelector('.table'); // Assuming table is present on this page
+    let dataTable;
 
-        // Event listeners for column view options
-        const listViewDropdownDispatch = document.getElementById('listViewDropdownDispatch');
-        if (listViewDropdownDispatch) {
-            listViewDropdownDispatch.querySelectorAll('.dropdown-item').forEach(item => {
-                item.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    const columnView = this.dataset.columnView;
-                    const currentUrl = new URL(window.location.href);
-                    currentUrl.searchParams.set('column_view', columnView);
-                    window.location.href = currentUrl.toString();
-                });
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize DataTable
+        dataTable = $('#pendingOrdersTable').DataTable({
+            processing: true,
+            serverSide: false, // We're handling pagination on the client side
+            ajax: {
+                url: "{{ url_for('data.production_data') }}",
+                data: function(d) {
+                    // Add our custom filters
+                    d.search = $('#search').val();
+                    d.channel = $('#channel').val();
+                    d.from_date = $('#from_date').val();
+                    d.to_date = $('#to_date').val();
+                }
+            },
+            columns: [], // Will be populated dynamically
+            order: [[0, 'desc']], // Default sort by first column descending
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+            language: {
+                processing: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>'
+            }
+        });
+
+        // Handle filter form submission
+        $('#filterForm').on('submit', function(e) {
+            e.preventDefault();
+            dataTable.ajax.reload();
+        });
+
+        // Handle filter form reset
+        $('#filterForm').on('reset', function(e) {
+            e.preventDefault();
+            $(this).find('input').val('');
+            dataTable.ajax.reload();
+        });
+
+        // Function to update table columns based on response
+        function updateTableColumns(headers) {
+            const columns = headers.map(header => ({
+                data: header,
+                title: header.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+            }));
+            
+            dataTable.destroy();
+            dataTable = $('#pendingOrdersTable').DataTable({
+                processing: true,
+                serverSide: false,
+                ajax: {
+                    url: "{{ url_for('data.production_data') }}",
+                    data: function(d) {
+                        d.search = $('#search').val();
+                        d.channel = $('#channel').val();
+                        d.from_date = $('#from_date').val();
+                        d.to_date = $('#to_date').val();
+                    }
+                },
+                columns: columns,
+                order: [[0, 'desc']],
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                language: {
+                    processing: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>'
+                }
             });
         }
 
-        let selectedRowsDispatch = new Set();
-
-        // Placeholder function to update button state (adapt as needed)
-        function updateSelectionStateDispatch() {
-            // Example: If you have checkboxes with class 'row-select-dispatch'
-            // const rowSelectCheckboxes = document.querySelectorAll('.row-select-dispatch');
-            // selectedRowsDispatch.clear();
-            // rowSelectCheckboxes.forEach(checkbox => {
-            //     if (checkbox.checked) {
-            //         selectedRowsDispatch.add(checkbox.closest('tr').dataset.id);
-            //     }
-            // });
-
-            if (deleteSelectedBtnDispatch) {
-                deleteSelectedBtnDispatch.disabled = selectedRowsDispatch.size === 0;
+        // Initial load to get headers
+        $.ajax({
+            url: "{{ url_for('data.production_data') }}",
+            success: function(response) {
+                if (response.headers) {
+                    updateTableColumns(response.headers);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading table headers:', error);
             }
-        }
-
-        // Initial state update (call this if you have checkboxes on page load)
-        updateSelectionStateDispatch();
+        });
     });
 </script>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .table th {
+        white-space: nowrap;
+        background-color: #343a40;
+        color: white;
+    }
+    .table td {
+        vertical-align: middle;
+    }
+    .badge {
+        font-size: 0.9em;
+        padding: 0.5em 0.8em;
+    }
+</style>
 {% endblock %} 

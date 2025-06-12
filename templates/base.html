@@ -63,7 +63,10 @@
                 </a>
                 <a href="{{ url_for('data.production_data') }}" class="list-group-item list-group-item-action bg-dark text-white {% if request.endpoint == 'data.production_data' %}active{% endif %}">
                     <i class="bi bi-table me-2"></i> <span class="sidebar-text">Pending Order</span>
-               </a>
+                </a>
+                <a href="{{ url_for('sales_order.list_orders') }}" class="list-group-item list-group-item-action bg-dark text-white {% if request.endpoint.startswith('sales_order.') %}active{% endif %}">
+                    <i class="bi bi-cart me-2"></i> <span class="sidebar-text">Sales Order</span>
+                </a>
                 <a href="{{ url_for('main.reports') }}" class="list-group-item list-group-item-action bg-dark text-white {% if request.endpoint == 'main.reports' %}active{% endif %}">
                     <i class="bi bi-graph-up me-2"></i> <span class="sidebar-text">Reports</span>
                 </a>

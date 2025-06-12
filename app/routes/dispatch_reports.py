@@ -234,7 +234,7 @@ def monthly_dispatch_report():
         for record in years_response.data
     )))
     
-    return render_template('dispatch_reports.html',
+    return render_template('reports/dispatch_reports.html',
                          year=year,
                          years=years,
                          monthly_data=monthly_data,
@@ -291,7 +291,7 @@ def dispatch_summary_report():
         for record in years_response.data
     )))
     
-    return render_template('dispatch_summary.html',
+    return render_template('reports/dispatch_summary.html',
                          year=year,
                          years=years,
                          totals=totals,

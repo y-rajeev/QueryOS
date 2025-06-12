@@ -1,0 +1,651 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    /* Table styles for compactness and no gaps */
+    #itemsTable {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+        margin-bottom: 0;
+    }
+
+    #itemsTable th, #itemsTable td {
+        padding: 0.3rem 0.5rem; /* Reduced padding */
+        border: 1px solid #dee2e6; /* Thin borders */
+        vertical-align: middle;
+    }
+
+    #itemsTable thead th {
+        background-color: #f8f9fa;
+        text-align: center;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    #itemsTable tbody tr:hover {
+        background-color: #f2f2f2;
+    }
+
+    #itemsTable input.form-control {
+        border: none;
+        padding: 0.25rem 0.5rem;
+        height: auto;
+        background-color: transparent;
+        box-shadow: none;
+        width: 100%; /* Ensure inputs take full cell width */
+    }
+
+    #itemsTable input.form-control:focus {
+        background-color: #e9ecef;
+    }
+
+    /* Paste highlight effect */
+    .pasted-highlight {
+        transition: background-color 0.5s ease-out;
+        background-color: #d1e7dd; /* Light green for success */
+    }
+
+    /* Scrollable table for responsiveness */
+    .table-responsive {
+        overflow-x: auto;
+        max-height: 400px; /* Limit height to make it scrollable vertically */
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6; /* Add border to the scrollable area */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>{{ 'Edit' if data.po_no else 'New' }} Sales Order</h2>
+        <a href="{{ url_for('sales_order.list_orders') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <form method="POST" id="salesOrderForm">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Order Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="po_no" class="form-label">PO No</label>
+                        <input type="text" class="form-control" id="po_no" name="po_no" 
+                               value="{{ data.po_no }}" {{ 'readonly' if data.po_no else '' }} required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="po_date" class="form-label">PO Date</label>
+                        <input type="date" class="form-control" id="po_date" name="po_date" 
+                               value="{{ data.po_date }}" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="delivery_date" class="form-label">Delivery Date</label>
+                        <input type="date" class="form-control" id="delivery_date" name="delivery_date" 
+                               value="{{ data.delivery_date }}" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status" required>
+                            <option value="">Select Status</option>
+                            <option value="Draft" {% if data.status == 'Draft' %}selected{% endif %}>Draft</option>
+                            <option value="In-Prod" {% if data.status == 'In-Prod' %}selected{% endif %}>In-Prod</option>
+                            <option value="Closed" {% if data.status == 'Closed' %}selected{% endif %}>Closed</option>
+                            <option value="Cancelled" {% if data.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="branch" class="form-label">Branch</label>
+                        <input type="text" class="form-control" id="branch" name="branch" 
+                               value="{{ data.branch }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="warehouse" class="form-label">Warehouse</label>
+                        <input type="text" class="form-control" id="warehouse" name="warehouse" 
+                               value="{{ data.warehouse }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="repository" class="form-label">Repository</label>
+                        <input type="text" class="form-control" id="repository" name="repository" 
+                               value="{{ data.repository }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="country" class="form-label">Country</label>
+                        <select class="form-select" id="country" name="country">
+                            <option value="">Select Country</option>
+                            <option value="Amazon IN" {% if data.country == 'Amazon IN' %}selected{% endif %}>Amazon IN</option>
+                            <option value="Amazon EU" {% if data.country == 'Amazon EU' %}selected{% endif %}>Amazon EU</option>
+                            <option value="Amazon UK" {% if data.country == 'Amazon UK' %}selected{% endif %}>Amazon UK</option>
+                            <option value="Amazon US" {% if data.country == 'Amazon US' %}selected{% endif %}>Amazon US</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="mode" class="form-label">Mode</label>
+                        <select class="form-select" id="mode" name="mode">
+                            <option value="">Select Mode</option>
+                            <option value="Air" {% if data.mode == 'Air' %}selected{% endif %}>Air</option>
+                            <option value="Sea" {% if data.mode == 'Sea' %}selected{% endif %}>Sea</option>
+                            <option value="Road" {% if data.mode == 'Road' %}selected{% endif %}>Road</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Items Section -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Sales Order Items</h5>
+                <div>
+                    <button type="button" class="btn btn-info btn-sm me-2" onclick="pasteData()">
+                        <i class="fas fa-paste"></i> Paste Data
+                    </button>
+                    <label for="fileUpload" class="btn btn-secondary btn-sm me-2 mb-0">
+                        <i class="fas fa-upload"></i> Upload CSV/TSV
+                        <input type="file" id="fileUpload" style="display:none;" accept=".csv,.tsv" onchange="uploadFile(event)">
+                    </label>
+                    <button type="button" class="btn btn-success btn-sm me-2" onclick="downloadTableAsCsv()">
+                        <i class="fas fa-download"></i> Download CSV
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm me-2" onclick="addItemRow()">
+                        <i class="fas fa-plus"></i> Add Item
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="clearAllItems()">
+                        <i class="fas fa-times"></i> Clear All
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="itemsTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">Sr No</th>
+                                <th data-column="sku">SKU</th>
+                                <th data-column="product">Product</th>
+                                <th data-column="category">Category</th>
+                                <th data-column="line">Line</th>
+                                <th data-column="design">Design</th>
+                                <th data-column="size">Size</th>
+                                <th style="width: 80px;" data-column="pack_of">Pack Of</th>
+                                <th style="width: 80px;" data-column="sets">Sets</th>
+                                <th style="width: 80px;" data-column="pieces">Pieces</th>
+                                <th style="width: 60px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsTableBody">
+                            {% if items %}
+                                {% for item in items %}
+                                <tr data-uuid="{{ item.id if item.id else '' }}">
+                                    <td>{{ loop.index }}</td>
+                                    <td><input type="text" class="form-control" name="items[{{ loop.index0 }}][sku]" value="{{ item.sku if item.sku else '' }}"></td>
+                                    <td><input type="text" class="form-control" name="items[{{ loop.index0 }}][product]" value="{{ item.product if item.product else '' }}"></td>
+                                    <td><input type="text" class="form-control" name="items[{{ loop.index0 }}][category]" value="{{ item.category if item.category else '' }}"></td>
+                                    <td><input type="text" class="form-control" name="items[{{ loop.index0 }}][line]" value="{{ item.line if item.line else '' }}"></td>
+                                    <td><input type="text" class="form-control" name="items[{{ loop.index0 }}][design]" value="{{ item.design if item.design else '' }}"></td>
+                                    <td><input type="text" class="form-control" name="items[{{ loop.index0 }}][size]" value="{{ item.size if item.size else '' }}"></td>
+                                    <td><input type="number" class="form-control" name="items[{{ loop.index0 }}][pack_of]" value="{{ item.pack_of if item.pack_of else '' }}"></td>
+                                    <td><input type="number" class="form-control" name="items[{{ loop.index0 }}][sets]" value="{{ item.sets if item.sets else '' }}"></td>
+                                    <td><input type="number" class="form-control pieces-input" name="items[{{ loop.index0 }}][pieces]" value="{{ item.pieces if item.pieces else '' }}"></td>
+                                    <td>
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="removeItemRow(this)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                            <!-- Initial empty row for new orders -->
+                            <tr data-uuid="">
+                                <td>1</td>
+                                <td><input type="text" class="form-control" name="items[0][sku]" value=""></td>
+                                <td><input type="text" class="form-control" name="items[0][product]" value=""></td>
+                                <td><input type="text" class="form-control" name="items[0][category]" value=""></td>
+                                <td><input type="text" class="form-control" name="items[0][line]" value=""></td>
+                                <td><input type="text" class="form-control" name="items[0][design]" value=""></td>
+                                <td><input type="text" class="form-control" name="items[0][size]" value=""></td>
+                                <td><input type="number" class="form-control" name="items[0][pack_of]" value=""></td>
+                                <td><input type="number" class="form-control" name="items[0][sets]" value=""></td>
+                                <td><input type="number" class="form-control pieces-input" name="items[0][pieces]" value=""></td>
+                                <td>
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="removeItemRow(this)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                <input type="hidden" id="itemCount" name="item_count" value="{{ items|length if items else 1 }}">
+                <input type="hidden" id="totalQty" name="total_qty_calculated">
+            </div>
+        </div>
+
+        <div class="text-end mb-4">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Save Order
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let itemCount = parseInt(document.getElementById('itemCount').value);
+
+// Column mapping for paste functionality and keyboard navigation
+const columnMap = {};
+const headerNames = []; // To preserve original casing for CSV export
+document.querySelectorAll('#itemsTable thead th[data-column]').forEach(th => {
+    const dataColumn = th.getAttribute('data-column').toLowerCase();
+    const originalHeader = th.textContent.trim();
+    columnMap[dataColumn] = th.cellIndex;
+    headerNames[th.cellIndex] = originalHeader; // Store original header for export
+});
+
+// Function to generate a UUID (simplified for client-side)
+function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+function addItemRow(values = {}) {
+    const tbody = document.getElementById('itemsTableBody');
+    const newRow = tbody.insertRow();
+    newRow.setAttribute('data-uuid', values.id || generateUUID());
+    
+    const currentRowIndex = tbody.rows.length - 1; // Current 0-based index of the new row
+    
+    newRow.innerHTML = `
+        <td>${currentRowIndex + 1}</td>
+        <td><input type="text" class="form-control" name="items[${currentRowIndex}][sku]" value="${values.sku || ''}"></td>
+        <td><input type="text" class="form-control" name="items[${currentRowIndex}][product]" value="${values.product || ''}"></td>
+        <td><input type="text" class="form-control" name="items[${currentRowIndex}][category]" value="${values.category || ''}"></td>
+        <td><input type="text" class="form-control" name="items[${currentRowIndex}][line]" value="${values.line || ''}"></td>
+        <td><input type="text" class="form-control" name="items[${currentRowIndex}][design]" value="${values.design || ''}"></td>
+        <td><input type="text" class="form-control" name="items[${currentRowIndex}][size]" value="${values.size || ''}"></td>
+        <td><input type="number" class="form-control" name="items[${currentRowIndex}][pack_of]" value="${values.pack_of || ''}"></td>
+        <td><input type="number" class="form-control" name="items[${currentRowIndex}][sets]" value="${values.sets || ''}"></td>
+        <td><input type="number" class="form-control pieces-input" name="items[${currentRowIndex}][pieces]" value="${values.pieces || ''}"></td>
+        <td>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeItemRow(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    
+    itemCount++;
+    document.getElementById('itemCount').value = itemCount;
+    updateSrNumbersAndNames(); // Update all rows to ensure correct indexing and names
+    addPiecesChangeListener(newRow.querySelector('.pieces-input'));
+    attachKeyboardListeners(newRow); // Attach listeners to new row's inputs
+
+    return newRow; // Return the newly added row
+}
+
+function removeItemRow(button) {
+    const row = button.closest('tr');
+    row.remove();
+    itemCount--;
+    document.getElementById('itemCount').value = itemCount;
+    updateSrNumbersAndNames();
+    calculateTotalQty();
+    if (itemCount === 0) { // If last row is removed, add one empty back
+        addItemRow();
+    }
+}
+
+function updateSrNumbersAndNames() {
+    const rows = document.getElementById('itemsTableBody').getElementsByTagName('tr');
+    for (let i = 0; i < rows.length; i++) {
+        rows[i].cells[0].textContent = i + 1; // Update Sr No.
+        const inputs = rows[i].querySelectorAll('input, select');
+        inputs.forEach(input => {
+            const nameAttr = input.getAttribute('name');
+            if (nameAttr && nameAttr.startsWith('items[')) {
+                const fieldName = nameAttr.split('][')[1].replace(']', '');
+                input.setAttribute('name', `items[${i}][${fieldName}]`);
+            }
+        });
+    }
+}
+
+function clearAllItems() {
+    if (confirm('Are you sure you want to clear all items?')) {
+        document.getElementById('itemsTableBody').innerHTML = '';
+        itemCount = 0;
+        document.getElementById('itemCount').value = itemCount;
+        calculateTotalQty();
+        addItemRow(); // Add an empty row back for new input
+    }
+}
+
+// Helper to get column name from input element
+function getColumnName(inputElement) {
+    const nameAttr = inputElement.getAttribute('name');
+    if (nameAttr && nameAttr.startsWith('items[')) {
+        return nameAttr.split('][')[1].replace(']', '');
+    }
+    return null;
+}
+
+// Centralized paste logic for clipboard and file upload
+async function parseAndPopulateTable(text, startRowIndex = 0, startColIndex = 0) {
+    const pastedRows = text.trim().split(/\r?\n/).filter(row => row.trim() !== '');
+    if (pastedRows.length === 0) return;
+
+    const tbody = document.getElementById('itemsTableBody');
+    const firstRowPasted = pastedRows[0].split(/\t|,/); // Try tab or comma for headers
+
+    let pastedHeaders = [];
+    let dataStartsFromRow = 0;
+    let actualPastedColIndices = []; // Maps pasted column index to actual table cell index
+
+    // Try to detect headers in pasted data
+    const knownHeaders = Object.keys(columnMap);
+    const potentialHeaders = firstRowPasted.map(cell => cell.trim().toLowerCase());
+    const headerMatchCount = potentialHeaders.filter(ph => knownHeaders.includes(ph)).length;
+
+    if (headerMatchCount > 0 && headerMatchCount === potentialHeaders.length) {
+         // Assume first row is header if all potential headers match known headers
+        pastedHeaders = potentialHeaders;
+        dataStartsFromRow = 1;
+        // Build actualPastedColIndices based on matched headers
+        pastedHeaders.forEach((ph, i) => {
+            if (columnMap[ph] !== undefined) {
+                actualPastedColIndices[i] = columnMap[ph];
+            } else {
+                actualPastedColIndices[i] = -1; // Indicate unmatched column
+            }
+        });
+    } else {
+        // No headers in pasted data, assume sequential paste starting from current column
+        const tableHeaderCells = Array.from(document.querySelectorAll('#itemsTable thead th[data-column]'));
+        for(let i = 0; i < firstRowPasted.length; i++) {
+            if (startColIndex + i < tableHeaderCells.length) {
+                const headerCol = tableHeaderCells[startColIndex + i].getAttribute('data-column');
+                if (headerCol) {
+                     actualPastedColIndices[i] = columnMap[headerCol];
+                }
+            }
+        }
+    }
+
+    // Ask to clear existing items if pasting multiple new rows into existing populated table
+    if (pastedRows.length - dataStartsFromRow > 0 && tbody.rows.length > 1) { // Check if more than one row exists
+        if (confirm('Pasting multiple rows. Do you want to clear existing items first?')) {
+            clearAllItems(); // This will also add one empty row back
+            startRowIndex = 0; // Reset starting index if cleared
+        }
+    }
+    
+    let firstUpdatedRowElement = null; // To scroll to later
+
+    for (let i = dataStartsFromRow; i < pastedRows.length; i++) {
+        const cells = pastedRows[i].split(/\t|,/); // Try tab or comma for data cells
+        let targetRow;
+
+        const targetRowIndex = startRowIndex + (i - dataStartsFromRow);
+        
+        if (targetRowIndex < tbody.rows.length) {
+            targetRow = tbody.rows[targetRowIndex];
+        } else {
+            targetRow = addItemRow(); // Dynamically add a new row
+        }
+
+        if (!firstUpdatedRowElement) {
+            firstUpdatedRowElement = targetRow;
+        }
+
+        // Populate cells based on identified columns
+        for (let j = 0; j < cells.length; j++) {
+            const targetCellIndex = actualPastedColIndices[j];
+            if (targetCellIndex !== undefined && targetCellIndex !== -1) {
+                // Find the input in the target cell
+                const input = targetRow.cells[targetCellIndex].querySelector('input, select');
+                if (input) {
+                    input.value = cells[j].trim();
+                    input.classList.add('pasted-highlight');
+                    setTimeout(() => {
+                        input.classList.remove('pasted-highlight');
+                    }, 1000);
+                }
+            }
+        }
+    }
+
+    updateSrNumbersAndNames();
+    calculateTotalQty();
+
+    if (firstUpdatedRowElement) {
+        firstUpdatedRowElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    const unmatchedHeaders = pastedHeaders.filter(ph => columnMap[ph] === undefined);
+    if (unmatchedHeaders.length > 0 && dataStartsFromRow === 1) { // Only warn if headers were detected
+        alert(`Warning: Some columns from pasted data could not be mapped: ${unmatchedHeaders.join(', ')}. Please check your headers.`);
+    }
+}
+
+async function pasteData() {
+    try {
+        const clipboardText = await navigator.clipboard.readText();
+        let focusedInput = document.activeElement;
+        let startRowIndex = 0;
+        let startColIndex = 0;
+
+        // Determine starting row and column if an input inside the table is focused
+        if (focusedInput && focusedInput.closest('#itemsTableBody')) {
+            const currentRow = focusedInput.closest('tr');
+            const currentCell = focusedInput.closest('td');
+            startRowIndex = currentRow.rowIndex - 1; // -1 for tbody rows
+            startColIndex = currentCell.cellIndex;
+        }
+        
+        await parseAndPopulateTable(clipboardText, startRowIndex, startColIndex);
+
+    } catch (err) {
+        console.error('Failed to read clipboard contents: ', err);
+        alert('Failed to paste data. Please ensure you have granted clipboard access and try again.');
+    }
+}
+
+// Keyboard Navigation
+function attachKeyboardListeners(rowElement) {
+    rowElement.querySelectorAll('input, select').forEach(input => {
+        input.addEventListener('keydown', handleKeyDown);
+    });
+}
+
+function handleKeyDown(event) {
+    const currentInput = event.target;
+    const currentRow = currentInput.closest('tr');
+    const currentCell = currentInput.closest('td');
+    
+    if (!currentRow || !currentCell) return;
+
+    const rowIndex = currentRow.rowIndex - 1; // 0-based index within tbody
+    const colIndex = currentCell.cellIndex;
+
+    let nextInput = null;
+
+    if (event.key === 'ArrowRight' || (event.key === 'Enter' && !event.shiftKey)) {
+        event.preventDefault(); // Prevent default Enter behavior (form submit)
+        // Try next cell in current row
+        let nextColIndex = colIndex + 1;
+        while (nextColIndex < currentRow.cells.length) {
+            nextInput = currentRow.cells[nextColIndex].querySelector('input, select');
+            if (nextInput) break;
+            nextColIndex++;
+        }
+        // If no next cell in current row, go to first cell of next row
+        if (!nextInput && (rowIndex + 1) < document.getElementById('itemsTableBody').rows.length) {
+            nextInput = document.getElementById('itemsTableBody').rows[rowIndex + 1].querySelector('input, select');
+        } else if (!nextInput && (rowIndex + 1) === document.getElementById('itemsTableBody').rows.length) {
+            // If at the last row and last cell, add a new row
+            const newRowElement = addItemRow();
+            nextInput = newRowElement.querySelector('input, select');
+        }
+    } else if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        // Try previous cell in current row
+        let prevColIndex = colIndex - 1;
+        while (prevColIndex >= 0) {
+            nextInput = currentRow.cells[prevColIndex].querySelector('input, select');
+            if (nextInput) break;
+            prevColIndex--;
+        }
+        // If no previous cell in current row, go to last cell of previous row
+        if (!nextInput && (rowIndex - 1) >= 0) {
+            const prevRow = document.getElementById('itemsTableBody').rows[rowIndex - 1];
+            nextInput = prevRow.querySelector('td:last-child input, select');
+        }
+    } else if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        // Try same column in next row
+        if ((rowIndex + 1) < document.getElementById('itemsTableBody').rows.length) {
+            const nextRow = document.getElementById('itemsTableBody').rows[rowIndex + 1];
+            nextInput = nextRow.cells[colIndex].querySelector('input, select');
+        } else {
+            // If at the last row, add a new row and go to the same column
+            const newRowElement = addItemRow();
+            nextInput = newRowElement.cells[colIndex].querySelector('input, select');
+        }
+    } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        // Try same column in previous row
+        if ((rowIndex - 1) >= 0) {
+            const prevRow = document.getElementById('itemsTableBody').rows[rowIndex - 1];
+            nextInput = prevRow.cells[colIndex].querySelector('input, select');
+        }
+    }
+
+    if (nextInput) {
+        nextInput.focus();
+        nextInput.select(); // Select content for easier editing
+    }
+}
+
+// Upload CSV/TSV
+function uploadFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const content = e.target.result;
+        // Determine starting row/col for file upload (usually from beginning)
+        await parseAndPopulateTable(content, 0, 0); 
+    };
+    reader.readAsText(file);
+    event.target.value = ''; // Clear file input
+}
+
+// Download CSV
+function downloadTableAsCsv() {
+    const rows = document.getElementById('itemsTableBody').getElementsByTagName('tr');
+    let csvContent = "";
+
+    // Add headers
+    const headers = Array.from(document.querySelectorAll('#itemsTable thead th[data-column]'))
+                            .map(th => `"${th.textContent.trim()}"`); // Get actual displayed header text
+    csvContent += headers.join(',') + '\n';
+
+    // Add data rows
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const rowData = [];
+        // Skip Sr No column (cells[0])
+        for (let j = 1; j < row.cells.length - 1; j++) { // Loop through data cells, exclude last Action column
+            const input = row.cells[j].querySelector('input, select');
+            rowData.push(`"${input ? input.value.trim().replace(/"/g, '""') : ''}"`); // Escape quotes
+        }
+        csvContent += rowData.join(',') + '\n';
+    }
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) { // feature detection
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'sales_order_items.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+}
+
+// Auto-calculate Total Qty
+function calculateTotalQty() {
+    let total = 0;
+    document.querySelectorAll('#itemsTableBody .pieces-input').forEach(input => {
+        total += parseInt(input.value) || 0;
+    });
+    document.getElementById('totalQty').value = total;
+}
+
+function addPiecesChangeListener(input) {
+    if (input) {
+        input.addEventListener('input', calculateTotalQty);
+    }
+}
+
+// Initial setup when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    // Attach change listeners to existing pieces inputs
+    document.querySelectorAll('#itemsTableBody .pieces-input').forEach(input => {
+        addPiecesChangeListener(input);
+    });
+    calculateTotalQty(); // Calculate initial total
+
+    // Attach keyboard navigation listeners to all existing inputs
+    document.querySelectorAll('#itemsTableBody input, #itemsTableBody select').forEach(input => {
+        attachKeyboardListeners(input.closest('tr'));
+    });
+
+    // Form validation
+    document.getElementById('salesOrderForm').addEventListener('submit', function(e) {
+        const poNo = document.getElementById('po_no').value;
+        const poDate = document.getElementById('po_date').value;
+        const deliveryDate = document.getElementById('delivery_date').value;
+        const status = document.getElementById('status').value;
+        
+        if (!poNo || !poDate || !deliveryDate || !status) {
+            e.preventDefault();
+            alert('Please fill in all required header fields.');
+            return;
+        }
+        
+        if (new Date(deliveryDate) < new Date(poDate)) {
+            e.preventDefault();
+            alert('Delivery date cannot be earlier than PO date.');
+            return;
+        }
+
+        // Ensure at least one item row exists if creating a new order
+        if (itemCount === 0 && !"{{ data.po_no }}") { // Check if it's a new order
+            e.preventDefault();
+            alert('Please add at least one item to the sales order.');
+            return;
+        }
+    });
+
+    // Ensure there's always at least one row for new forms
+    if (itemCount === 0 && !"{{ data.po_no }}") {
+        addItemRow();
+        itemCount = 1;
+    }
+});
+
+</script>
+{% endblock %} 

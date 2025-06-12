@@ -33,10 +33,11 @@ def create_app():
         return User(user_id)
     
     # Register blueprints
-    from app.routes import main, data, dispatch_reports
+    from app.routes import main, data, dispatch_reports, sales_order
     app.register_blueprint(main.bp)
     app.register_blueprint(data.bp, url_prefix='/data')
     app.register_blueprint(dispatch_reports.bp)
+    app.register_blueprint(sales_order.bp)
     
     # Register custom Jinja2 filters
     @app.template_filter('number_format')

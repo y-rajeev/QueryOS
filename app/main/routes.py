@@ -4,4 +4,4 @@ from flask_login import login_required
 @bp.route('/reports')
 @login_required
 def reports():
-    return render_template('reports.html') 
+    return render_template('reports/reports_dashboard.html') 

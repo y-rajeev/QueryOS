@@ -21,7 +21,7 @@ TABLES = {
 DEFAULT_LIMITED_COLUMNS = {
     "tab_cutting": ["id", "date", "po_no", "sku", "product", "produced_qty"],
     "tab_inprod": ["id", "po_no", "product", "order_qty", "produced_qty"],
-    "tab_production": ["date", "product", "produced_qty"]
+    "tab_production": ["date", "product", "pcs_pack", "sets", "produced_qty", "unpair_pcs"]
 }
 
 def get_limited_columns(table_key):
@@ -81,28 +81,54 @@ def get_all_data(table_name: str, search_term: str = "", columns: list[str] = No
 
 @bp.route("/pending-order")
 def production_data():
-    search = request.args.get("search", "").strip()
     try:
-        page = max(1, min(int(request.args.get("page", 1)), 9999))
-    except ValueError:
-        page = 1
-    limit = int(request.args.get("limit", 20))
-    column_view = request.args.get("column_view", "all")
-    
-    columns_to_fetch = get_limited_columns("tab_inprod") if column_view == "limited" else None
-    
-    data = get_paginated_data(TABLES["shipment"], search, page, limit, columns=columns_to_fetch)
-    
-    # Debug prints
-    print("=== DEBUG INFO ===")
-    print(f"Headers: {data.get('headers')}")
-    print(f"Number of rows: {len(data.get('rows', []))}")
-    if data.get('rows'):
-        print(f"First row keys: {list(data['rows'][0].keys())}")
-        print(f"First row values: {list(data['rows'][0].values())}")
-    print("=================")
-    
-    return render_template("shipment.html", **data, column_view=column_view)
+        # Define the columns we want to show in order
+        columns = [
+            'shipment_id',
+            'date',
+            'ETD',
+            'production',
+            'channel_abb',
+            'mode',
+            'po_qty',
+            'dispatched_qty',
+            'pending_qty',
+            'status'
+        ]
+        
+        # Build the query
+        query = supabase.table('pending_order').select(','.join(columns))
+        
+        # Add sorting by date descending
+        query = query.order('date', desc=True)
+        
+        # Execute query
+        response = query.execute()
+        
+        # Process the response
+        if response.data:
+            orders = response.data
+            total_records = len(orders)
+        else:
+            orders = []
+            total_records = 0
+        
+        return render_template(
+            "shipment.html",
+            headers=columns,
+            orders=orders,
+            total_records=total_records
+        )
+        
+    except Exception as e:
+        logger.error(f"Error fetching pending order data: {str(e)}", exc_info=True)
+        flash(f'Error loading pending orders: {str(e)}', 'error')
+        return render_template(
+            "shipment.html",
+            headers=[],
+            orders=[],
+            total_records=0
+        )
 
 @bp.route("/cutting-phase")
 def cutting():
@@ -124,7 +150,7 @@ def cutting():
     summary_metrics = get_cutting_summary_metrics()
     
     print(f"Cutting page - Headers: {data.get('headers')}")  # Debug log
-    return render_template("cutting.html", **data, column_view=column_view, today_date=date.today().isoformat(), summary_metrics=summary_metrics)
+    return render_template("manufacturing/cutting_phase.html", **data, column_view=column_view, today_date=date.today().isoformat(), summary_metrics=summary_metrics)
 
 @bp.route("/cutting-phase/details/test", methods=['GET'])
 def cutting_details_test():
@@ -302,7 +328,7 @@ def tab_production():
     
     data = get_paginated_data(TABLES["tab_production"], search, page, limit, columns=columns_to_fetch)
     print(f"Tab Production page - Headers: {data.get('headers')}")  # Debug log
-    return render_template("tab_production.html", **data, column_view=column_view, today_date=date.today().isoformat())
+    return render_template("manufacturing/production_phase.html", **data, column_view=column_view, today_date=date.today().isoformat())
 
 @bp.route("/production-phase/details/<string:record_id>", methods=['GET'])
 def get_production_details(record_id):
@@ -339,6 +365,18 @@ def add_production():
 
         produced_qty = int(data.get('produced_qty')) if data.get('produced_qty') else 0
         rejection = int(data.get('rejection')) if data.get('rejection') else 0
+        
+        # Retrieve pcs_pack and calculate sets and unpair_pcs
+        pcs_pack = int(data.get('pcs_pack')) if data.get('pcs_pack') else 0
+        
+        calculated_sets = 0
+        calculated_unpair_pcs = 0
+        if pcs_pack > 0:
+            calculated_sets = produced_qty // pcs_pack
+            calculated_unpair_pcs = produced_qty % pcs_pack
+        else:
+            # If pcs_pack is 0, sets should be 0 and unpair_pcs should be the full produced_qty
+            calculated_unpair_pcs = produced_qty
 
         new_record = {
             "id": record_id,
@@ -350,7 +388,10 @@ def add_production():
             "line": data.get('line'),
             "design": data.get('design'),
             "size": data.get('size'),
+            "pcs_pack": pcs_pack,
+            "sets": calculated_sets,
             "produced_qty": produced_qty,
+            "unpair_pcs": calculated_unpair_pcs,
             "rejection": rejection
         }
 
@@ -374,16 +415,30 @@ def edit_production(id):
             data = request.form
             produced_qty = int(data.get('produced_qty')) if data.get('produced_qty') else 0
             rejection = int(data.get('rejection')) if data.get('rejection') else 0
+            
+            # Retrieve pcs_pack and calculate sets and unpair_pcs for edit
+            pcs_pack = int(data.get('pcs_pack')) if data.get('pcs_pack') else 0
+            
+            calculated_sets = 0
+            calculated_unpair_pcs = 0
+            if pcs_pack > 0:
+                calculated_sets = produced_qty // pcs_pack
+                calculated_unpair_pcs = produced_qty % pcs_pack
+            else:
+                calculated_unpair_pcs = produced_qty
 
             updated_record_data = {
-                "date": datetime.strptime(data.get('date'), '%Y-%m-%d').date(),
+                "date": datetime.strptime(data.get('date'), '%Y-%m-%d').date().isoformat(),
                 "po_no": data.get('po_no'),
                 "sku": data.get('sku'),
                 "product": data.get('product'),
                 "line": data.get('line'),
                 "design": data.get('design'),
                 "size": data.get('size'),
+                "pcs_pack": pcs_pack,
+                "sets": calculated_sets,
                 "produced_qty": produced_qty,
+                "unpair_pcs": calculated_unpair_pcs,
                 "rejection": rejection
             }
 

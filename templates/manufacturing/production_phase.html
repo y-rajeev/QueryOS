@@ -75,6 +75,7 @@
                     <th>Pcs Pack</th>
                     <th>Sets</th>
                     <th>Produced Qty</th>
+                    <th>Unpair PCS</th>
                     <th>Rejection</th>
                     <!-- {% for header in headers %}
                     <th>{{ header }}</th>
@@ -91,9 +92,10 @@
                     <td>{{ row.line }}</td>
                     <td>{{ row.design }}</td>
                     <td>{{ row.size }}</td>
-                    <td>{{ row.pcs_pack }}</td>
-                    <td>{{ row.sets }}</td>
+                    <td>{{ row.pcs_pack | default(0) }}</td>
+                    <td>{{ row.sets | default(0) }}</td>
                     <td>{{ row.produced_qty }}</td>
+                    <td>{{ row.unpair_pcs | default(0) }}</td>
                     <td>{{ row.rejection }}</td>
                     <!-- {% for header in headers %}
                     <td>{{ row[header] }}</td>
@@ -146,8 +148,20 @@
                                 <input type="text" class="form-control form-control-sm" name="size" required>
                             </div>
                             <div class="col-md-6">
+                                <label class="form-label">Pcs Pack</label>
+                                <input type="number" class="form-control form-control-sm" name="pcs_pack" id="pcs_pack" required onchange="calculateSetsAndUnpair()">
+                            </div>
+                            <div class="col-md-6">
                                 <label class="form-label">Produced Quantity</label>
-                                <input type="number" class="form-control form-control-sm" name="produced_qty" required>
+                                <input type="number" class="form-control form-control-sm" name="produced_qty" id="produced_qty" required onchange="calculateSetsAndUnpair()">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Sets</label>
+                                <input type="number" class="form-control form-control-sm" name="sets" id="sets" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Unpair PCS</label>
+                                <input type="number" class="form-control form-control-sm" name="unpair_pcs" id="unpair_pcs" readonly>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Rejection</label>
@@ -204,8 +218,20 @@
                                 <input type="text" class="form-control form-control-sm" name="size" required>
                             </div>
                             <div class="col-md-6">
+                                <label class="form-label">Pcs Pack</label>
+                                <input type="number" class="form-control form-control-sm" name="pcs_pack" id="edit_pcs_pack" required onchange="calculateEditSetsAndUnpair()">
+                            </div>
+                            <div class="col-md-6">
                                 <label class="form-label">Produced Quantity</label>
-                                <input type="number" class="form-control form-control-sm" name="produced_qty" required>
+                                <input type="number" class="form-control form-control-sm" name="produced_qty" id="edit_produced_qty" required onchange="calculateEditSetsAndUnpair()">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Sets</label>
+                                <input type="number" class="form-control form-control-sm" name="sets" id="edit_sets" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Unpair PCS</label>
+                                <input type="number" class="form-control form-control-sm" name="unpair_pcs" id="edit_unpair_pcs" readonly>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Rejection</label>
@@ -244,6 +270,39 @@
 
 {% block scripts %}
 <script>
+    // Add these functions at the beginning of your script block
+    function calculateSetsAndUnpair() {
+        const pcsPack = parseInt(document.getElementById('pcs_pack').value) || 0;
+        const producedQty = parseInt(document.getElementById('produced_qty').value) || 0;
+        
+        if (pcsPack > 0) {
+            const sets = Math.floor(producedQty / pcsPack);
+            const unpairPcs = producedQty % pcsPack;
+            
+            document.getElementById('sets').value = sets;
+            document.getElementById('unpair_pcs').value = unpairPcs;
+        } else {
+            document.getElementById('sets').value = 0;
+            document.getElementById('unpair_pcs').value = producedQty;
+        }
+    }
+
+    function calculateEditSetsAndUnpair() {
+        const pcsPack = parseInt(document.getElementById('edit_pcs_pack').value) || 0;
+        const producedQty = parseInt(document.getElementById('edit_produced_qty').value) || 0;
+        
+        if (pcsPack > 0) {
+            const sets = Math.floor(producedQty / pcsPack);
+            const unpairPcs = producedQty % pcsPack;
+            
+            document.getElementById('edit_sets').value = sets;
+            document.getElementById('edit_unpair_pcs').value = unpairPcs;
+        } else {
+            document.getElementById('edit_sets').value = 0;
+            document.getElementById('edit_unpair_pcs').value = producedQty;
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         // Add double-click event listener to table rows
         const tableRows = document.querySelectorAll('.table-row-selectable');
@@ -279,6 +338,9 @@
                                 input.value = data[key];
                             }
                         });
+                        
+                        // Calculate sets and unpair_pcs after populating the form
+                        calculateEditSetsAndUnpair();
                         
                         // Show the modal
                         const modal = new bootstrap.Modal(editModal);
