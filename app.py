@@ -35,6 +35,7 @@ def create_app_with_extensions(test_config: Optional[dict] = None) -> Flask:
 
     # Configure logging
     if not app.debug and not app.testing:
+        # Set up a file handler for general application logs
         if not os.path.exists('logs'):
             os.mkdir('logs')
         file_handler = RotatingFileHandler('logs/queryos.log',
@@ -47,6 +48,15 @@ def create_app_with_extensions(test_config: Optional[dict] = None) -> Flask:
         file_handler.setLevel(logging.INFO)
         app.logger.addHandler(file_handler)
         app.logger.setLevel(logging.INFO)
+
+        # Suppress verbose logging from httpx and hpack to prevent API keys in logs
+        logging.getLogger('httpcore.connection').setLevel(logging.INFO)
+        logging.getLogger('httpcore.http11').setLevel(logging.INFO)
+        logging.getLogger('httpcore.http2').setLevel(logging.INFO)
+        logging.getLogger('hpack.hpack').setLevel(logging.INFO)
+        logging.getLogger('hpack.table').setLevel(logging.INFO)
+        logging.getLogger('httpx').setLevel(logging.INFO)
+
         app.logger.info('QueryOS startup')
 
     # Register custom Jinja2 filters
