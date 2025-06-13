@@ -68,7 +68,7 @@ def get_all_data(table_name: str, search_term: str = "", columns: list[str] = No
                 conditions.append(f"{col}.ilike.%{search_term}%")
             
             if conditions:
-                print(f"[DEBUG] Constructing Supabase OR query for table '{table_name}' with conditions: {",".join(conditions)}")
+                print(f"[DEBUG] Constructing Supabase OR query for table '{table_name}' with conditions: {','.join(conditions)}")
                 query = query.or_(",".join(conditions))
             else:
                 print(f"[DEBUG] No valid searchable columns found for table '{table_name}' with query '{search_term}' from provided columns: {columns}")
