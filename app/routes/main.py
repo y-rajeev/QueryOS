@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, request
 from flask_login import login_required, login_user, logout_user, current_user
 from app import User
 from app.models.data_models import get_monthly_production_data, get_available_production_months, get_article_summary_data, get_monthly_cutting_data, get_available_cutting_months, get_article_cutting_summary_data, get_cutting_summary_metrics, get_production_summary_metrics
+from app.routes.data import get_all_data
 
 bp = Blueprint('main', __name__)
 
@@ -17,6 +18,48 @@ def dashboard():
 @login_required
 def reports():
     return render_template('reports/reports_dashboard.html')
+
+@bp.route('/search')
+@login_required
+def search_results():
+    query = request.args.get('search', '').strip().lower()
+    
+    # --- Page Search / Redirect Logic ---
+    if "sales order" in query:
+        return redirect(url_for('sales_order.list_orders'))
+    elif "production phase" in query or "production data" in query:
+        return redirect(url_for('data.tab_production'))
+    elif "cutting phase" in query or "cutting data" in query:
+        return redirect(url_for('data.cutting'))
+    elif "pending order" in query or "dispatch data" in query:
+        return redirect(url_for('data.production_data')) # Assuming production_data route handles pending orders
+    # --- End Page Search / Redirect Logic ---
+
+    # If no direct page match, proceed with content search (existing logic)
+    production_results = []
+    cutting_results = []
+    sales_order_results = []
+    pending_order_results = []
+
+    if query:
+        # Define columns to search for each table
+        production_search_columns = ["product", "design", "sku", "po_no"]
+        cutting_search_columns = ["product", "design", "sku", "po_no"]
+        sales_order_search_columns = ["po_no", "customer_name"]
+        pending_order_search_columns = ["shipment_id", "product", "channel_abb"]
+
+        # Fetch results from different tables
+        production_results = get_all_data("tab_production", search_term=query, columns=production_search_columns)
+        cutting_results = get_all_data("tab_cutting", search_term=query, columns=cutting_search_columns)
+        sales_order_results = get_all_data("tab_sales_order", search_term=query, columns=sales_order_search_columns)
+        pending_order_results = get_all_data("tab_inprod", search_term=query, columns=pending_order_search_columns)
+
+    return render_template('search_results.html',
+                           search_query=query,
+                           production_results=production_results,
+                           cutting_results=cutting_results,
+                           sales_order_results=sales_order_results,
+                           pending_order_results=pending_order_results)
 
 @bp.route('/logout')
 def logout():

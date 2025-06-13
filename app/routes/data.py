@@ -52,16 +52,26 @@ def get_all_data(table_name: str, search_term: str = "", columns: list[str] = No
         query = supabase.table(table_name).select(select_columns)
         
         if search_term:
-            # Supabase doesn't allow dynamic column search like raw SQL easily, 
-            # so we'll limit search to common columns or you might need a dedicated search API.
-            # For now, let's assume basic search on a few common text columns or rely on frontend filtering.
-            # If you need advanced full-text search, consider Supabase's FTS capabilities.
-            search_columns = ['po_no', 'sku', 'product', 'design', 'line'] # Common search columns
+            # If specific columns are provided by the caller, use those for the search.
+            # Otherwise, fall back to a broader set of common text-based columns.
+            if columns:
+                # Filter out explicitly known non-string/non-searchable columns from the provided list
+                # This list should be expanded if there are other numeric/boolean/date fields in your tables
+                non_searchable_types = ['id', 'date', 'input_timestamp', 'created_at', 'produced_qty', 'rejection', 'pcs_pack', 'sets', 'unpair_pcs', 'po_qty', 'dispatched_qty', 'pending_qty', 'order_qty']
+                searchable_cols = [col for col in columns if col not in non_searchable_types]
+            else:
+                # Fallback to a broader set of common text-based columns for generic search if no specific columns were provided
+                searchable_cols = ['po_no', 'sku', 'product', 'design', 'line', 'shipment_id', 'channel_abb', 'customer_name', 'status', 'production', 'mode']
+
             conditions = []
-            for col in search_columns:
+            for col in searchable_cols:
                 conditions.append(f"{col}.ilike.%{search_term}%")
+            
             if conditions:
+                print(f"[DEBUG] Constructing Supabase OR query for table '{table_name}' with conditions: {",".join(conditions)}")
                 query = query.or_(",".join(conditions))
+            else:
+                print(f"[DEBUG] No valid searchable columns found for table '{table_name}' with query '{search_term}' from provided columns: {columns}")
 
         # No dynamic WHERE clause based on `information_schema.columns` needed here for Supabase
 
