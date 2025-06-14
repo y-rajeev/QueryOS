@@ -233,7 +233,7 @@ def monthly_dispatch_report():
         years = sorted(list(set(
             datetime.strptime(record['month'], '%Y-%m-%d').year
             for record in years_response.data
-            if record['month'] is not None
+            if record['month'] and isinstance(record['month'], str)
         )))
         
         return render_template('reports/dispatch_reports.html',
@@ -296,7 +296,7 @@ def dispatch_summary_report():
     years = sorted(list(set(
         datetime.strptime(record['month'], '%Y-%m-%d').year
         for record in years_response.data
-        if record['month'] is not None
+        if record['month'] and isinstance(record['month'], str)
     )))
     
     return render_template('reports/dispatch_summary.html',
