@@ -192,68 +192,75 @@ def calculate_percentages(totals):
 @bp.route('/dispatch/monthly')
 def monthly_dispatch_report():
     """Route for monthly dispatch report."""
-    # Get year from query parameters, default to current year
-    year = int(request.args.get('year', datetime.now().year))
-    branch = request.args.get('branch', 'all')
-    channel = request.args.get('channel', 'all')
-    repository = request.args.get('repository', 'all')
-    
-    # Get all required data
-    monthly_data = get_monthly_data(year, branch, channel, repository)
-    quarterly_data = get_quarterly_data(monthly_data)
-    channel_data = get_channel_data(year, branch, repository)
-    repository_data = get_repository_data(year, branch, channel)
-    branch_data = get_branch_data(year, branch, repository)
-    
-    # Prepare data for charts
-    monthly_labels = [m['month'] for m in monthly_data]
-    monthly_karur = [m['karur'] for m in monthly_data]
-    monthly_mumbai = [m['mumbai'] for m in monthly_data]
-    
-    quarterly_labels = [q['quarter'] for q in quarterly_data]
-    quarterly_karur = [q['karur'] for q in quarterly_data]
-    quarterly_mumbai = [q['mumbai'] for q in quarterly_data]
-    
-    channel_labels = [c['channel'] for c in channel_data]
-    channel_data_values = [c['count'] for c in channel_data]
-    
-    repository_labels = [r['repository'] for r in repository_data]
-    repository_data_values = [r['count'] for r in repository_data]
-    
-    branch_labels = [b['branch'] for b in branch_data]
-    branch_data_values = [b['count'] for b in branch_data]
-    
-    # Get available years for the dropdown
-    supabase = get_supabase_client()
-    years_response = supabase.table('tab_shipment_meta') \
-        .select('month') \
-        .execute()
-    
-    years = sorted(list(set(
-        datetime.strptime(record['month'], '%Y-%m-%d').year
-        for record in years_response.data
-    )))
-    
-    return render_template('reports/dispatch_reports.html',
-                         year=year,
-                         years=years,
-                         monthly_data=monthly_data,
-                         quarterly_data=quarterly_data,
-                         channel_data=channel_data,
-                         repository_data=repository_data,
-                         branch_data=branch_data,
-                         monthly_labels=monthly_labels,
-                         monthly_karur=monthly_karur,
-                         monthly_mumbai=monthly_mumbai,
-                         quarterly_labels=quarterly_labels,
-                         quarterly_karur=quarterly_karur,
-                         quarterly_mumbai=quarterly_mumbai,
-                         channel_labels=channel_labels,
-                         channel_data_values=channel_data_values,
-                         repository_labels=repository_labels,
-                         repository_data_values=repository_data_values,
-                         branch_labels=branch_labels,
-                         branch_data_values=branch_data_values)
+    try:
+        # Get year from query parameters, default to current year
+        year = int(request.args.get('year', datetime.now().year))
+        branch = request.args.get('branch', 'all')
+        channel = request.args.get('channel', 'all')
+        repository = request.args.get('repository', 'all')
+        
+        # Get all required data
+        monthly_data = get_monthly_data(year, branch, channel, repository)
+        quarterly_data = get_quarterly_data(monthly_data)
+        channel_data = get_channel_data(year, branch, repository)
+        repository_data = get_repository_data(year, branch, channel)
+        branch_data = get_branch_data(year, branch, repository)
+        
+        # Prepare data for charts
+        monthly_labels = [m['month'] for m in monthly_data]
+        monthly_karur = [m['karur'] for m in monthly_data]
+        monthly_mumbai = [m['mumbai'] for m in monthly_data]
+        
+        quarterly_labels = [q['quarter'] for q in quarterly_data]
+        quarterly_karur = [q['karur'] for q in quarterly_data]
+        quarterly_mumbai = [q['mumbai'] for q in quarterly_data]
+        
+        channel_labels = [c['channel'] for c in channel_data]
+        channel_data_values = [c['count'] for c in channel_data]
+        
+        repository_labels = [r['repository'] for r in repository_data]
+        repository_data_values = [r['count'] for r in repository_data]
+        
+        branch_labels = [b['branch'] for b in branch_data]
+        branch_data_values = [b['count'] for b in branch_data]
+        
+        # Get available years for the dropdown
+        supabase = get_supabase_client()
+        years_response = supabase.table('tab_shipment_meta') \
+            .select('month') \
+            .execute()
+        
+        years = sorted(list(set(
+            datetime.strptime(record['month'], '%Y-%m-%d').year
+            for record in years_response.data
+            if record['month'] is not None
+        )))
+        
+        return render_template('reports/dispatch_reports.html',
+                             year=year,
+                             years=years,
+                             monthly_data=monthly_data,
+                             quarterly_data=quarterly_data,
+                             channel_data=channel_data,
+                             repository_data=repository_data,
+                             branch_data=branch_data,
+                             monthly_labels=monthly_labels,
+                             monthly_karur=monthly_karur,
+                             monthly_mumbai=monthly_mumbai,
+                             quarterly_labels=quarterly_labels,
+                             quarterly_karur=quarterly_karur,
+                             quarterly_mumbai=quarterly_mumbai,
+                             channel_labels=channel_labels,
+                             channel_data_values=channel_data_values,
+                             repository_labels=repository_labels,
+                             repository_data_values=repository_data_values,
+                             branch_labels=branch_labels,
+                             branch_data_values=branch_data_values)
+    except Exception as e:
+        # Log the error
+        print(f"Error in monthly_dispatch_report: {str(e)}")
+        # Return a more user-friendly error page
+        return render_template('error.html', error="An error occurred while loading the report. Please try again later."), 500
 
 @bp.route('/dispatch/summary')
 def dispatch_summary_report():
@@ -289,6 +296,7 @@ def dispatch_summary_report():
     years = sorted(list(set(
         datetime.strptime(record['month'], '%Y-%m-%d').year
         for record in years_response.data
+        if record['month'] is not None
     )))
     
     return render_template('reports/dispatch_summary.html',

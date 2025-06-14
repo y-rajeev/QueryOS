@@ -229,14 +229,6 @@
                                 <i class="bi bi-graph-up"></i> Compare Years
                             </button>
                         </div>
-                        <div class="d-flex gap-2">
-                            <div class="input-group search-box">
-                                <input type="text" class="form-control" placeholder="Search..." id="searchInput" onkeyup="filterData()">
-                                <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()">
-                                    <i class="bi bi-x"></i>
-                                </button>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -249,11 +241,12 @@
             <div class="card stat-card">
                 <div class="card-body">
                     <div class="stat-label">Total Quantity</div>
-                    <div class="stat-value">
-                        {{ monthly_data|sum(attribute='total')|number_format }}
-                        <!-- <span class="trend-indicator trend-up">
-                            <i class="bi bi-arrow-up"></i> 5.2%
-                        </span> -->
+                    <div class="stat-value" id="totalQuantityStat">
+                        {% if monthly_data %}
+                            {{ monthly_data|sum(attribute='total')|number_format }}
+                        {% else %}
+                            0
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -262,11 +255,12 @@
             <div class="card stat-card">
                 <div class="card-body">
                     <div class="stat-label">Karur Branch</div>
-                    <div class="stat-value">
-                        {{ monthly_data|sum(attribute='karur')|number_format }}
-                        <!-- <span class="trend-indicator trend-up">
-                            <i class="bi bi-arrow-up"></i> 3.1%
-                        </span> -->
+                    <div class="stat-value" id="karurBranchStat">
+                        {% if monthly_data %}
+                            {{ monthly_data|sum(attribute='karur')|number_format }}
+                        {% else %}
+                            0
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -275,11 +269,12 @@
             <div class="card stat-card">
                 <div class="card-body">
                     <div class="stat-label">Mumbai Branch</div>
-                    <div class="stat-value">
-                        {{ monthly_data|sum(attribute='mumbai')|number_format }}
-                        <!-- <span class="trend-indicator trend-down">
-                            <i class="bi bi-arrow-down"></i> 2.4%
-                        </span> -->
+                    <div class="stat-value" id="mumbaiBranchStat">
+                        {% if monthly_data %}
+                            {{ monthly_data|sum(attribute='mumbai')|number_format }}
+                        {% else %}
+                            0
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -288,11 +283,12 @@
             <div class="card stat-card">
                 <div class="card-body">
                     <div class="stat-label">Average Monthly</div>
-                    <div class="stat-value">
-                        {{ (monthly_data|sum(attribute='total') / 12)|round|int|number_format }}
-                        <!-- <span class="trend-indicator trend-up">
-                            <i class="bi bi-arrow-up"></i> 4.8%
-                        </span> -->
+                    <div class="stat-value" id="averageMonthlyStat">
+                        {% if monthly_data %}
+                            {{ (monthly_data|sum(attribute='total') / 12)|round|int|number_format }}
+                        {% else %}
+                            0
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -608,17 +604,17 @@ function initializeCharts() {
         monthlyChart = new Chart(monthlyCtx.getContext('2d'), {
     type: 'line',
     data: {
-        labels: {{ monthly_labels|tojson }},
+        labels: JSON.parse('{{ monthly_labels|tojson|safe }}'),
         datasets: [{
             label: 'Karur',
-            data: {{ monthly_karur|tojson }},
+            data: JSON.parse('{{ monthly_karur|tojson|safe }}'),
             borderColor: 'rgb(75, 192, 192)',
                     backgroundColor: 'rgba(75, 192, 192, 0.1)',
                     tension: 0.1,
                     fill: true
         }, {
             label: 'Mumbai',
-            data: {{ monthly_mumbai|tojson }},
+            data: JSON.parse('{{ monthly_mumbai|tojson|safe }}'),
             borderColor: 'rgb(255, 99, 132)',
                     backgroundColor: 'rgba(255, 99, 132, 0.1)',
                     tension: 0.1,
@@ -672,16 +668,16 @@ function initializeCharts() {
         quarterlyChart = new Chart(quarterlyCtx.getContext('2d'), {
     type: 'bar',
     data: {
-        labels: {{ quarterly_labels|tojson }},
+        labels: JSON.parse('{{ quarterly_labels|tojson|safe }}'),
         datasets: [{
             label: 'Karur',
-            data: {{ quarterly_karur|tojson }},
+            data: JSON.parse('{{ quarterly_karur|tojson|safe }}'),
             backgroundColor: 'rgba(75, 192, 192, 0.5)',
             borderColor: 'rgb(75, 192, 192)',
             borderWidth: 1
         }, {
             label: 'Mumbai',
-            data: {{ quarterly_mumbai|tojson }},
+            data: JSON.parse('{{ quarterly_mumbai|tojson|safe }}'),
             backgroundColor: 'rgba(255, 99, 132, 0.5)',
             borderColor: 'rgb(255, 99, 132)',
             borderWidth: 1
@@ -718,9 +714,9 @@ function initializeCharts() {
         channelChart = new Chart(channelCtx.getContext('2d'), {
             type: 'doughnut',
     data: {
-        labels: {{ channel_labels|tojson }},
+        labels: JSON.parse('{{ channel_labels|tojson|safe }}'),
         datasets: [{
-            data: {{ channel_data_values|tojson }},
+            data: JSON.parse('{{ channel_data_values|tojson|safe }}'),
             backgroundColor: [
                         'rgba(75, 192, 192, 0.5)',
                 'rgba(255, 99, 132, 0.5)',
@@ -763,9 +759,9 @@ function initializeCharts() {
         repositoryChart = new Chart(repositoryCtx.getContext('2d'), {
             type: 'pie',
     data: {
-        labels: {{ repository_labels|tojson }},
+        labels: JSON.parse('{{ repository_labels|tojson|safe }}'),
         datasets: [{
-            data: {{ repository_data_values|tojson }},
+            data: JSON.parse('{{ repository_data_values|tojson|safe }}'),
             backgroundColor: [
                         'rgba(75, 192, 192, 0.5)',
                 'rgba(255, 99, 132, 0.5)',
@@ -808,9 +804,9 @@ function initializeCharts() {
         branchChart = new Chart(branchCtx.getContext('2d'), {
             type: 'doughnut',
     data: {
-        labels: {{ branch_labels|tojson }},
+        labels: JSON.parse('{{ branch_labels|tojson|safe }}'),
         datasets: [{
-            data: {{ branch_data_values|tojson }},
+            data: JSON.parse('{{ branch_data_values|tojson|safe }}'),
             backgroundColor: [
                 'rgba(75, 192, 192, 0.5)',
                         'rgba(255, 99, 132, 0.5)'
@@ -991,19 +987,19 @@ function updateTables(data) {
 
     const totalShipmentsElement = document.querySelector('.stat-card:nth-child(1) .stat-value');
     if (totalShipmentsElement) {
-        totalShipmentsElement.innerHTML = `${new Intl.NumberFormat().format(totalShipments)} <span class="trend-indicator trend-up"><i class="bi bi-arrow-up"></i> 5.2%</span>`;
+        totalShipmentsElement.innerHTML = new Intl.NumberFormat().format(totalShipments);
     }
     const karurBranchElement = document.querySelector('.stat-card:nth-child(2) .stat-value');
     if (karurBranchElement) {
-        karurBranchElement.innerHTML = `${new Intl.NumberFormat().format(karurTotal)} <span class="trend-indicator trend-up"><i class="bi bi-arrow-up"></i> 3.1%</span>`;
+        karurBranchElement.innerHTML = new Intl.NumberFormat().format(karurTotal);
     }
     const mumbaiBranchElement = document.querySelector('.stat-card:nth-child(3) .stat-value');
     if (mumbaiBranchElement) {
-        mumbaiBranchElement.innerHTML = `${new Intl.NumberFormat().format(mumbaiTotal)} <span class="trend-indicator trend-down"><i class="bi bi-arrow-down"></i> 2.4%</span>`;
+        mumbaiBranchElement.innerHTML = new Intl.NumberFormat().format(mumbaiTotal);
     }
     const avgMonthlyElement = document.querySelector('.stat-card:nth-child(4) .stat-value');
     if (avgMonthlyElement) {
-        avgMonthlyElement.innerHTML = `${new Intl.NumberFormat().format(Math.round(avgMonthly))} <span class="trend-indicator trend-up"><i class="bi bi-arrow-up"></i> 4.8%</span>`;
+        avgMonthlyElement.innerHTML = new Intl.NumberFormat().format(Math.round(avgMonthly));
     }
     console.log('Summary statistics updated.');
 }
@@ -1109,6 +1105,7 @@ function updateReport() {
         .then(data => {
             updateCharts(data);
             updateTables(data);
+            updateStatisticsCards(data);
             hideLoading();
         })
         .catch(error => {
@@ -1122,7 +1119,7 @@ function toggleComparison() {
     const comparisonYear = prompt('Enter year to compare with:', (new Date().getFullYear() - 1).toString());
     if (comparisonYear) {
         showLoading();
-        fetch(`/reports/api/dispatch/monthly/compare?year1={{ year }}&year2=${comparisonYear}`)
+        fetch(`/reports/api/dispatch/monthly/compare?year1=${JSON.parse('{{ year|tojson|safe }}')}&year2=${comparisonYear}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -1138,23 +1135,6 @@ function toggleComparison() {
                 hideLoading();
             });
     }
-}
-
-// Filter data based on search input
-function filterData() {
-    const searchText = document.getElementById('searchInput').value.toLowerCase();
-    const tables = document.querySelectorAll('.data-table tbody tr');
-    
-    tables.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(searchText) ? '' : 'none';
-    });
-}
-
-// Clear search
-function clearSearch() {
-    document.getElementById('searchInput').value = '';
-    filterData();
 }
 
 // Show loading overlay
@@ -1175,27 +1155,27 @@ function exportToExcel() {
     const wb = XLSX.utils.book_new();
     
     // Add monthly data
-    const monthlyWS = XLSX.utils.json_to_sheet({{ monthly_data|tojson }});
+    const monthlyWS = XLSX.utils.json_to_sheet(JSON.parse('{{ monthly_data|tojson|safe }}'));
     XLSX.utils.book_append_sheet(wb, monthlyWS, "Monthly Data");
     
     // Add quarterly data
-    const quarterlyWS = XLSX.utils.json_to_sheet({{ quarterly_data|tojson }});
+    const quarterlyWS = XLSX.utils.json_to_sheet(JSON.parse('{{ quarterly_data|tojson|safe }}'));
     XLSX.utils.book_append_sheet(wb, quarterlyWS, "Quarterly Data");
     
     // Add channel data
-    const channelWS = XLSX.utils.json_to_sheet({{ channel_data|tojson }});
+    const channelWS = XLSX.utils.json_to_sheet(JSON.parse('{{ channel_data|tojson|safe }}'));
     XLSX.utils.book_append_sheet(wb, channelWS, "Channel Data");
     
     // Add repository data
-    const repositoryWS = XLSX.utils.json_to_sheet({{ repository_data|tojson }});
+    const repositoryWS = XLSX.utils.json_to_sheet(JSON.parse('{{ repository_data|tojson|safe }}'));
     XLSX.utils.book_append_sheet(wb, repositoryWS, "Repository Data");
     
     // Add branch data
-    const branchWS = XLSX.utils.json_to_sheet({{ branch_data|tojson }});
+    const branchWS = XLSX.utils.json_to_sheet(JSON.parse('{{ branch_data|tojson|safe }}'));
     XLSX.utils.book_append_sheet(wb, branchWS, "Branch Data");
     
     // Save the file
-    XLSX.writeFile(wb, "dispatch_report_{{ year }}.xlsx");
+    XLSX.writeFile(wb, `dispatch_report_${JSON.parse('{{ year|tojson|safe }}')}.xlsx`);
     hideLoading();
 }
 
@@ -1255,5 +1235,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Function to update the statistics cards
+function updateStatisticsCards(data) {
+    const monthlyData = data.monthly_data;
+
+    let totalQuantity = 0;
+    let karurQuantity = 0;
+    let mumbaiQuantity = 0;
+
+    if (monthlyData && monthlyData.length > 0) {
+        monthlyData.forEach(month => {
+            totalQuantity += month.total || 0;
+            karurQuantity += month.karur || 0;
+            mumbaiQuantity += month.mumbai || 0;
+        });
+    }
+
+    const averageMonthly = monthlyData.length > 0 ? Math.round(totalQuantity / 12) : 0;
+
+    document.getElementById('totalQuantityStat').innerText = totalQuantity.toLocaleString();
+    document.getElementById('karurBranchStat').innerText = karurQuantity.toLocaleString();
+    document.getElementById('mumbaiBranchStat').innerText = mumbaiQuantity.toLocaleString();
+    document.getElementById('averageMonthlyStat').innerText = averageMonthly.toLocaleString();
+}
 </script>
 {% endblock %} 
